@@ -39,7 +39,7 @@ public class MyActivity extends Activity implement View.OnClickListener {
 	@Override
 	public void onClickListener(View v) {
 		PaymentActivity.startActivityForResult(MyActivity.this, CLIENT_ID,
-			new ParamsPhone("79012345678", new BigDecimal(100.0)), REQUEST_CODE);
+			new PhoneParams("79012345678", new BigDecimal(100.0)), REQUEST_CODE);
 	}
 }
 ```

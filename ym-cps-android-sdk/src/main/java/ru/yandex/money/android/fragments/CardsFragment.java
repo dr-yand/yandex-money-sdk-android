@@ -109,9 +109,9 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
 
             final ExternalCard moneySource = getCardAtPosition(position);
             final TextView panFragment = (TextView) root.findViewById(R.id.ym_pan_fragment);
-            panFragment.setText(MoneySourceFormatter.formatPanFragment(moneySource.getPanFragment()));
-            panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.parseCardType(
-                    moneySource.getType()).getCardResId(), 0, 0, 0);
+            panFragment.setText(MoneySourceFormatter.formatPanFragment(moneySource.panFragment));
+            panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.get(
+                    moneySource.type).cardResId, 0, 0, 0);
 
             ImageButton button = (ImageButton) root.findViewById(R.id.ym_actions);
             button.setOnClickListener(new View.OnClickListener() {

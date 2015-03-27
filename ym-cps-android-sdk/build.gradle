@@ -1,12 +1,12 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 20
-    buildToolsVersion "21.1.1"
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 20
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
     }
@@ -22,8 +22,6 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-
-    compile 'com.squareup.okhttp:okhttp:1.6.0'
-    compile 'com.google.code.gson:gson:2.2.4'
+    compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.0'
+    compile 'com.google.code.gson:gson:2.3'
 }

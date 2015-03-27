@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.yandex.money.api.model.Card;
 import com.yandex.money.api.model.ExternalCard;
 
 import java.util.ArrayList;
@@ -36,7 +37,8 @@ public class DatabaseStorage {
         List<ExternalCard> moneySources = new ArrayList<ExternalCard>();
         while (cursor.moveToNext()) {
             moneySources.add(new ExternalCard(cursor.getString(panFragmentIndex),
-                    cursor.getString(typeIndex), cursor.getString(fundingSourceTypeIndex),
+                    Card.Type.parse(cursor.getString(typeIndex)),
+                    cursor.getString(fundingSourceTypeIndex),
                     cursor.getString(tokenIndex)));
         }
 
@@ -52,10 +54,10 @@ public class DatabaseStorage {
         }
 
         ContentValues values = new ContentValues();
-        values.put(MoneySourceTable.FUNDING_SOURCE_TYPE, moneySource.getFundingSourceType());
-        values.put(MoneySourceTable.TYPE, moneySource.getType());
-        values.put(MoneySourceTable.PAN_FRAGMENT, moneySource.getPanFragment());
-        values.put(MoneySourceTable.TOKEN, moneySource.getMoneySourceToken());
+        values.put(MoneySourceTable.FUNDING_SOURCE_TYPE, moneySource.fundingSourceType);
+        values.put(MoneySourceTable.TYPE, moneySource.type.name);
+        values.put(MoneySourceTable.PAN_FRAGMENT, moneySource.panFragment);
+        values.put(MoneySourceTable.TOKEN, moneySource.moneySourceToken);
 
         if (values.size() != 0) {
             SQLiteDatabase database = getWritableDatabase();
@@ -73,7 +75,7 @@ public class DatabaseStorage {
         SQLiteDatabase database = getWritableDatabase();
         database.execSQL("DELETE FROM " + MoneySourceTable.NAME +
                 " WHERE " + MoneySourceTable.TOKEN + " = \"" +
-                moneySource.getMoneySourceToken() + "\"");
+                moneySource.moneySourceToken + "\"");
         database.close();
     }
 

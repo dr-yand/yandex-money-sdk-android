@@ -55,8 +55,6 @@ public class DataService extends IntentService {
     static final int REQUEST_TYPE_REQUEST_EXTERNAL_PAYMENT = 1;
     static final int REQUEST_TYPE_PROCESS_EXTERNAL_PAYMENT = 2;
 
-    private static final String INSTANCE_ID_ERROR_MESSAGE = "Couldn't perform instanceId request: ";
-
     private YandexMoney ym;
 
     public DataService() {
@@ -121,8 +119,8 @@ public class DataService extends IntentService {
     private void processPayment(String reqId, ProcessExternalPayment.Request req) {
         try {
             ProcessExternalPayment resp = ym.execute(req);
-            if (resp.getStatus() == BaseProcessPayment.Status.IN_PROGRESS) {
-                Threads.sleepSafely(resp.getNextRetry());
+            if (resp.status == BaseProcessPayment.Status.IN_PROGRESS) {
+                Threads.sleepSafely(resp.nextRetry);
                 processPayment(reqId, req);
             } else {
                 ProcessExternalPaymentParcelable parc = new ProcessExternalPaymentParcelable(resp);
@@ -174,16 +172,15 @@ public class DataService extends IntentService {
         try {
             InstanceId resp = ym.execute(new InstanceId.Request(clientId));
             if (resp.isSuccess()) {
-                String instanceId = resp.getInstanceId();
+                String instanceId = resp.instanceId;
                 new Prefs(getApplicationContext()).storeInstanceId(instanceId);
                 return instanceId;
             } else {
-                sendExceptionBroadcast(reqId, requestType, resp.getError(),
-                        resp.getStatus().toString());
+                sendExceptionBroadcast(reqId, requestType, resp.error,
+                        resp.status.toString());
                 return null;
             }
         } catch (Exception e) {
-            String message = INSTANCE_ID_ERROR_MESSAGE + e.getMessage();
             sendExceptionBroadcast(reqId, requestType, Error.UNKNOWN, null);
             return null;
         }

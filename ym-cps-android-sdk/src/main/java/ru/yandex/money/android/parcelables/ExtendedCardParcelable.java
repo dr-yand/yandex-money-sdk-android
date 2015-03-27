@@ -3,6 +3,7 @@ package ru.yandex.money.android.parcelables;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.yandex.money.api.model.Card;
 import com.yandex.money.api.model.ExternalCard;
 
 /**
@@ -17,8 +18,8 @@ public class ExtendedCardParcelable implements Parcelable {
     }
 
     private ExtendedCardParcelable(Parcel parcel) {
-        extendedCard = new ExternalCard(parcel.readString(), parcel.readString(), parcel.readString(),
-                parcel.readString());
+        extendedCard = new ExternalCard(parcel.readString(), (Card.Type) parcel.readSerializable(),
+                parcel.readString(), parcel.readString());
     }
 
     @Override
@@ -28,10 +29,10 @@ public class ExtendedCardParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(extendedCard.getPanFragment());
-        dest.writeString(extendedCard.getType());
-        dest.writeString(extendedCard.getFundingSourceType());
-        dest.writeString(extendedCard.getMoneySourceToken());
+        dest.writeString(extendedCard.panFragment);
+        dest.writeSerializable(extendedCard.type);
+        dest.writeString(extendedCard.fundingSourceType);
+        dest.writeString(extendedCard.moneySourceToken);
     }
 
     public ExternalCard getExtendedCard() {

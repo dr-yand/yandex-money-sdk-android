@@ -203,25 +203,25 @@ public class PaymentActivity extends Activity {
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {
         reqId = null;
-        if (rep.getStatus() == BaseRequestPayment.Status.SUCCESS) {
-            title = rep.getTitle();
-            requestId = rep.getRequestId();
-            contractAmount = rep.getContractAmount().doubleValue();
+        if (rep.status == BaseRequestPayment.Status.SUCCESS) {
+            title = rep.title;
+            requestId = rep.requestId;
+            contractAmount = rep.contractAmount.doubleValue();
             if (cards.size() == 0) {
                 replaceFragmentClearBackStack(WebFragment.newInstance(requestId));
             } else {
                 showCards();
             }
         } else {
-            showError(rep.getError(), rep.getStatus().toString());
+            showError(rep.error, rep.status.toString());
         }
         hideProgressBar();
     }
 
     private void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        if (pep.getStatus() == BaseProcessPayment.Status.SUCCESS) {
+        if (pep.status == BaseProcessPayment.Status.SUCCESS) {
             success = true;
-            invoiceId = pep.getInvoiceId();
+            invoiceId = pep.invoiceId;
         }
     }
 

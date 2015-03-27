@@ -57,7 +57,7 @@ public class CscFragment extends PaymentFragment {
 
         requestId = args.getString(EXTRA_REQUEST_ID);
         moneySource = extendedCardParcelable.getExtendedCard();
-        cardType = CardType.parseCardType(moneySource.getType());
+        cardType = CardType.get(moneySource.type);
 
         View view = inflater.inflate(R.layout.ym_csc_fragment, container, false);
         assert view != null : "unable to inflate view in CscFragment";
@@ -67,8 +67,8 @@ public class CscFragment extends PaymentFragment {
         errorMessage = (TextView) view.findViewById(R.id.ym_error_message);
 
         cscEditText = (EditText) view.findViewById(R.id.ym_csc);
-        cscEditText.setHint(getString(R.string.ym_csc_code, cardType.getCscAbbr()));
-        cscEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(cardType.getDigits())});
+        cscEditText.setHint(getString(R.string.ym_csc_code, moneySource.type.cscAbbr));
+        cscEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(moneySource.type.cscLength)});
 
         Views.setText(view, R.id.ym_csc_hint, getString(R.string.ym_csc_hint,
                 getString(MoneySourceFormatter.getCscNumberType(cardType)),
@@ -96,7 +96,7 @@ public class CscFragment extends PaymentFragment {
     @Override
     protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
         super.onExternalPaymentProcessed(pep);
-        switch (pep.getStatus()) {
+        switch (pep.status) {
             case SUCCESS:
                 showSuccess(moneySource);
                 break;
@@ -104,7 +104,7 @@ public class CscFragment extends PaymentFragment {
                 showWeb(pep, moneySource);
                 break;
             default:
-                showError(pep.getError(), pep.getStatus().toString());
+                showError(pep.error, pep.status.toString());
         }
         hideProgressBar();
     }
@@ -143,6 +143,6 @@ public class CscFragment extends PaymentFragment {
 
     private boolean valid() {
         csc = Views.getTextSafely(cscEditText);
-        return csc != null && csc.length() == cardType.getDigits();
+        return csc != null && csc.length() == moneySource.type.cscLength;
     }
 }

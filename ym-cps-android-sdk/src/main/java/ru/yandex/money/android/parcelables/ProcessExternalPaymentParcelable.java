@@ -40,17 +40,17 @@ public class ProcessExternalPaymentParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(pep.getStatus());
-        dest.writeSerializable(pep.getError());
-        dest.writeString(pep.getAcsUri());
-        Parcelables.writeNullableStringMap(dest, pep.getAcsParams());
+        dest.writeSerializable(pep.status);
+        dest.writeSerializable(pep.error);
+        dest.writeString(pep.acsUri);
+        Parcelables.writeNullableStringMap(dest, pep.acsParams);
         writeMoneySource(dest, flags);
-        Parcelables.writeNullableLong(dest, pep.getNextRetry());
-        dest.writeString(pep.getInvoiceId());
+        Parcelables.writeNullableLong(dest, pep.nextRetry);
+        dest.writeString(pep.invoiceId);
     }
 
     private void writeMoneySource(Parcel dest, int flags) {
-        ExternalCard moneySource = pep.getMoneySource();
+        ExternalCard moneySource = pep.moneySource;
         ExtendedCardParcelable parcelable = moneySource == null ? null :
                 new ExtendedCardParcelable(moneySource);
         Parcelables.writeNullableParcelable(dest, parcelable, flags);

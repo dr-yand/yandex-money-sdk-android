@@ -37,11 +37,11 @@ public class RequestExternalPaymentParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(rep.getStatus());
-        dest.writeSerializable(rep.getError());
-        dest.writeString(rep.getRequestId());
-        Parcelables.writeBigDecimal(dest, rep.getContractAmount());
-        dest.writeString(rep.getTitle());
+        dest.writeSerializable(rep.status);
+        dest.writeSerializable(rep.error);
+        dest.writeString(rep.requestId);
+        Parcelables.writeBigDecimal(dest, rep.contractAmount);
+        dest.writeString(rep.title);
     }
 
     public RequestExternalPayment getRequestExternalPayment() {

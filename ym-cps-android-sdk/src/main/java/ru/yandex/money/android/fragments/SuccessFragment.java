@@ -98,13 +98,13 @@ public class SuccessFragment extends PaymentFragment {
     @Override
     protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
         super.onExternalPaymentProcessed(pep);
-        if (pep.getStatus() == BaseProcessPayment.Status.SUCCESS) {
-            moneySource = pep.getMoneySource();
+        if (pep.status == BaseProcessPayment.Status.SUCCESS) {
+            moneySource = pep.moneySource;
             new DatabaseStorage(getPaymentActivity()).insertMoneySource(moneySource);
             state = State.SAVING_COMPLETED;
             onCardSaved();
         } else {
-            showError(pep.getError(), pep.getStatus().toString());
+            showError(pep.error, pep.status.toString());
         }
     }
 
@@ -142,14 +142,14 @@ public class SuccessFragment extends PaymentFragment {
 
     private void onCardSaved() {
         Views.setImageResource(getView(), R.id.ym_payment_card_type,
-                CardType.parseCardType(moneySource.getType()).getIcoResId());
+                CardType.get(moneySource.type).icoResId);
         Views.setText(getView(), R.id.ym_pan_fragment,
-                MoneySourceFormatter.formatPanFragment(moneySource.getPanFragment()));
+                MoneySourceFormatter.formatPanFragment(moneySource.panFragment));
         card.setBackgroundResource(R.drawable.ym_card_saved);
         saveCard.setVisibility(View.GONE);
         successMarker.setVisibility(View.VISIBLE);
         description.setText(getString(R.string.ym_success_card_saved_description,
-                CardType.parseCardType(moneySource.getType()).getCscAbbr()));
+                moneySource.type.cscAbbr));
     }
 
     private void onCardExists() {

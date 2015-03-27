@@ -105,7 +105,7 @@ public class WebFragment extends PaymentFragment {
     @Override
     protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
         super.onExternalPaymentProcessed(pep);
-        switch (pep.getStatus()) {
+        switch (pep.status) {
             case SUCCESS:
                 showSuccess(moneySource);
                 break;
@@ -113,13 +113,13 @@ public class WebFragment extends PaymentFragment {
                 loadPage(pep);
                 break;
             default:
-                showError(pep.getError(), pep.getStatus().toString());
+                showError(pep.error, pep.status.toString());
         }
     }
 
     private void loadPage(ProcessExternalPayment pep) {
         showWebView();
-        webView.postUrl(pep.getAcsUri(), buildPostData(pep));
+        webView.postUrl(pep.acsUri, buildPostData(pep));
     }
 
     private void showProgress() {
@@ -138,7 +138,7 @@ public class WebFragment extends PaymentFragment {
 
     private byte[] buildPostData(ProcessExternalPayment pep) {
         String url = "";
-        for (Map.Entry<String, String> entry : pep.getAcsParams().entrySet()) {
+        for (Map.Entry<String, String> entry : pep.acsParams.entrySet()) {
             url += entry.getKey() + "=" + safeUrlEncoding(entry.getValue()) + "&";
         }
         return EncodingUtils.getBytes(url, "BASE64");

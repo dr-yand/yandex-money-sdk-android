@@ -9,6 +9,7 @@ import android.widget.Button;
 
 import com.yandex.money.api.model.Error;
 
+import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.utils.Views;
 
@@ -90,7 +91,7 @@ public class ErrorFragment extends PaymentFragment {
         Views.setText(view, R.id.ym_error_title, getString(titleResId));
         Views.setText(view, R.id.ym_error_message, getString(messageResId));
 
-        Button action = (Button) view.findViewById(R.id.ym_error_action);
+        final Button action = (Button) view.findViewById(R.id.ym_error_action);
         if (actionResId == notSpecified) {
             action.setVisibility(View.GONE);
             action.setOnClickListener(null);
@@ -100,7 +101,12 @@ public class ErrorFragment extends PaymentFragment {
             action.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getPaymentActivity().repeat();
+                    startActionSafely(new Action() {
+                        @Override
+                        public void start(PaymentActivity activity) {
+                            activity.repeat();
+                        }
+                    });
                 }
             });
         }

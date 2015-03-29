@@ -6,20 +6,30 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.Window;
 
+import com.squareup.okhttp.Call;
 import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.methods.BaseRequestPayment;
+import com.yandex.money.api.methods.InstanceId;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
 import com.yandex.money.api.methods.params.P2pParams;
 import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
+import com.yandex.money.api.model.MoneySource;
+import com.yandex.money.api.net.DefaultApiClient;
+import com.yandex.money.api.net.OAuth2Session;
+import com.yandex.money.api.processes.BasePaymentProcess;
+import com.yandex.money.api.processes.ExternalPaymentProcess;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import ru.yandex.money.android.database.DatabaseStorage;
 import ru.yandex.money.android.fragments.CardsFragment;
@@ -27,10 +37,6 @@ import ru.yandex.money.android.fragments.CscFragment;
 import ru.yandex.money.android.fragments.ErrorFragment;
 import ru.yandex.money.android.fragments.SuccessFragment;
 import ru.yandex.money.android.fragments.WebFragment;
-import ru.yandex.money.android.parcelables.ProcessExternalPaymentParcelable;
-import ru.yandex.money.android.parcelables.RequestExternalPaymentParcelable;
-import ru.yandex.money.android.services.DataService;
-import ru.yandex.money.android.services.DataServiceHelper;
 import ru.yandex.money.android.utils.Keyboards;
 
 /**
@@ -41,24 +47,10 @@ public class PaymentActivity extends Activity {
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
-    private static final String EXTRA_REQ_ID = "ru.yandex.money.android.extra.REQ_ID";
-    private static final String EXTRA_REQUEST_ID = "ru.yandex.money.android.extra.REQUEST_ID";
-    private static final String EXTRA_TITLE = "ru.yandex.money.android.extra.TITLE";
-    private static final String EXTRA_CONTRACT_AMOUNT = "ru.yandex.money.android.extra.CONTRACT_AMOUNT";
-    private static final String EXTRA_SUCCESS = "ru.yandex.money.android.extra.SUCCESS";
 
-    private final MultipleBroadcastReceiver receiver = buildReceiver();
-
+    private ExternalPaymentProcess process;
     private PaymentArguments arguments;
-    private DataServiceHelper dataServiceHelper;
     private List<ExternalCard> cards;
-
-    private String reqId;
-    private String title;
-    private String requestId;
-    private String invoiceId;
-    private double contractAmount;
-    private boolean success = false;
 
     public static void startActivityForResult(Activity activity, String clientId,
                                               P2pParams params, int requestCode) {
@@ -101,30 +93,14 @@ public class PaymentActivity extends Activity {
         }
 
         arguments = new PaymentArguments(getIntent().getBundleExtra(EXTRA_ARGUMENTS));
-        dataServiceHelper = new DataServiceHelper(this, arguments.getClientId());
         cards = new DatabaseStorage(this).selectMoneySources();
 
-        registerReceiver(receiver, receiver.buildIntentFilter());
+        initPaymentProcess();
         if (savedInstanceState == null) {
-            requestExternalPayment();
+            proceed();
         } else {
-            reqId = savedInstanceState.getString(EXTRA_REQ_ID);
-            requestId = savedInstanceState.getString(EXTRA_REQUEST_ID);
-            if (reqId == null && requestId == null) {
-                requestExternalPayment();
-            } else {
-                title = savedInstanceState.getString(EXTRA_TITLE);
-                invoiceId = savedInstanceState.getString(EXTRA_INVOICE_ID);
-                contractAmount = savedInstanceState.getDouble(EXTRA_CONTRACT_AMOUNT);
-                success = savedInstanceState.getBoolean(EXTRA_SUCCESS);
-            }
+            // TODO restore state
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(receiver);
     }
 
     @Override
@@ -145,47 +121,42 @@ public class PaymentActivity extends Activity {
         super.onBackPressed();
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(EXTRA_REQ_ID, reqId);
-        outState.putString(EXTRA_TITLE, title);
-        outState.putString(EXTRA_REQUEST_ID, requestId);
-        outState.putString(EXTRA_INVOICE_ID, invoiceId);
-        outState.putDouble(EXTRA_CONTRACT_AMOUNT, contractAmount);
-        outState.putBoolean(EXTRA_SUCCESS, success);
-    }
-
-    public DataServiceHelper getDataServiceHelper() {
-        return dataServiceHelper;
-    }
-
     public List<ExternalCard> getCards() {
         return cards;
     }
 
     public void showWeb() {
-        replaceFragmentClearBackStack(WebFragment.newInstance(requestId));
+        replaceFragmentClearBackStack(WebFragment.newInstance(
+                process.getRequestPayment().requestId));
     }
 
     public void showWeb(ProcessExternalPayment pep, ExternalCard moneySource) {
-        replaceFragmentAddingToBackStack(WebFragment.newInstance(requestId, pep, moneySource));
+        replaceFragmentAddingToBackStack(WebFragment.newInstance(
+                process.getRequestPayment().requestId, pep, moneySource));
     }
 
     public void showCards() {
-        replaceFragmentClearBackStack(CardsFragment.newInstance(title, contractAmount));
+        RequestExternalPayment rep = (RequestExternalPayment) process.getRequestPayment();
+        replaceFragmentClearBackStack(CardsFragment.newInstance(rep.title, rep.contractAmount));
     }
 
     public void showError(Error error, String status) {
         replaceFragmentClearBackStack(ErrorFragment.newInstance(error, status));
     }
 
+    public void showUnknownError() {
+        replaceFragmentClearBackStack(ErrorFragment.newInstance());
+    }
+
     public void showSuccess(ExternalCard moneySource) {
-        replaceFragmentClearBackStack(SuccessFragment.newInstance(requestId, contractAmount, moneySource));
+        BaseRequestPayment rp = process.getRequestPayment();
+        replaceFragmentClearBackStack(SuccessFragment.newInstance(rp.requestId, rp.contractAmount,
+                moneySource));
     }
 
     public void showCsc(ExternalCard moneySource) {
-        replaceFragmentAddingToBackStack(CscFragment.newInstance(requestId, moneySource));
+        replaceFragmentAddingToBackStack(CscFragment.newInstance(
+                process.getRequestPayment().requestId, moneySource));
     }
 
     public void showProgressBar() {
@@ -196,33 +167,122 @@ public class PaymentActivity extends Activity {
         setProgressBarIndeterminateVisibility(false);
     }
 
-    public void requestExternalPayment() {
-        reqId = dataServiceHelper.requestShop(arguments.getPatternId(), arguments.getParams());
+    public void proceed() {
+        performOperation(new Callable<Call>() {
+            @Override
+            public Call call() throws Exception {
+                return process.proceedAsync();
+            }
+        });
+    }
+
+    public void repeat() {
+        performOperation(new Callable<Call>() {
+            @Override
+            public Call call() throws Exception {
+                return process.repeatAsync();
+            }
+        });
+    }
+
+    private void performOperation(Callable<Call> operation) {
         showProgressBar();
+        try {
+            operation.call();
+        } catch (Exception e) {
+            onOperationFailed();
+        }
+    }
+
+    private void initPaymentProcess() {
+        String clientId = arguments.getClientId();
+        OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
+
+        final Prefs prefs = new Prefs(this);
+        String instanceId = prefs.restoreInstanceId();
+        if (TextUtils.isEmpty(instanceId)) {
+            showProgressBar();
+            try {
+                session.enqueue(new InstanceId.Request(clientId),
+                        new OAuth2Session.OnResponseReady<InstanceId>() {
+
+                            @Override
+                            public void onFailure(Exception exception) {
+                                onOperationFailed();
+                            }
+
+                            @Override
+                            public void onResponse(InstanceId response) {
+                                if (response.isSuccess()) {
+                                    prefs.storeInstanceId(response.instanceId);
+                                    initPaymentProcess();
+                                } else {
+                                    showError(response.error, response.status.code);
+                                }
+                                hideProgressBar();
+                            }
+                });
+            } catch (IOException e) {
+                onOperationFailed();
+            }
+            return;
+        }
+
+        process = new ExternalPaymentProcess(session, new BasePaymentProcess.ParameterProvider() {
+            @Override
+            public String getPatternId() {
+                return arguments.getPatternId();
+            }
+
+            @Override
+            public Map<String, String> getPaymentParameters() {
+                return arguments.getParams();
+            }
+
+            @Override
+            public MoneySource getMoneySource() {
+                return null;
+            }
+
+            @Override
+            public String getCsc() {
+                return null;
+            }
+
+            @Override
+            public String getExtAuthSuccessUri() {
+                return null;
+            }
+
+            @Override
+            public String getExtAuthFailUri() {
+                return null;
+            }
+        });
+
+        process.setInstanceId(instanceId);
+        process.setCallbacks(new Callbacks());
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {
-        reqId = null;
         if (rep.status == BaseRequestPayment.Status.SUCCESS) {
-            title = rep.title;
-            requestId = rep.requestId;
-            contractAmount = rep.contractAmount.doubleValue();
             if (cards.size() == 0) {
-                replaceFragmentClearBackStack(WebFragment.newInstance(requestId));
+                replaceFragmentClearBackStack(WebFragment.newInstance(rep.requestId));
             } else {
                 showCards();
             }
         } else {
             showError(rep.error, rep.status.toString());
         }
-        hideProgressBar();
     }
 
     private void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        if (pep.status == BaseProcessPayment.Status.SUCCESS) {
-            success = true;
-            invoiceId = pep.invoiceId;
-        }
+        // TODO implement
+    }
+
+    private void onOperationFailed() {
+        showUnknownError();
+        hideProgressBar();
     }
 
     private void replaceFragmentClearBackStack(Fragment fragment) {
@@ -258,53 +318,56 @@ public class PaymentActivity extends Activity {
     }
 
     private void applyResult() {
-        if (success) {
+        BaseProcessPayment pp = process.getProcessPayment();
+        if (pp.status == BaseProcessPayment.Status.SUCCESS) {
             Intent intent = new Intent();
-            intent.putExtra(EXTRA_INVOICE_ID, invoiceId);
+            intent.putExtra(EXTRA_INVOICE_ID, pp.invoiceId);
             setResult(RESULT_OK, intent);
         } else {
             setResult(RESULT_CANCELED);
         }
     }
 
-    private MultipleBroadcastReceiver buildReceiver() {
-        return new MultipleBroadcastReceiver()
-                .addHandler(DataService.ACTION_EXCEPTION, new IntentHandler() {
-                    @Override
-                    public void handle(Intent intent) {
-                        if (isManageableIntent(intent)) {
-                            Error error = (Error) intent.getSerializableExtra(DataService.EXTRA_EXCEPTION_ERROR);
-                            String status = intent.getStringExtra(DataService.EXTRA_EXCEPTION_STATUS);
-                            showError(error, status);
-                        }
-                    }
-                })
-                .addHandler(DataService.ACTION_REQUEST_EXTERNAL_PAYMENT, new IntentHandler() {
-                    @Override
-                    public void handle(Intent intent) {
-                        if (isManageableIntent(intent)) {
-                            RequestExternalPaymentParcelable parcelable = intent.getParcelableExtra(
-                                    DataService.EXTRA_SUCCESS_PARCELABLE);
-                            if (parcelable != null) {
-                                onExternalPaymentReceived(parcelable.getRequestExternalPayment());
-                            }
-                        }
-                    }
-                })
-                .addHandler(DataService.ACTION_PROCESS_EXTERNAL_PAYMENT, new IntentHandler() {
-                    @Override
-                    public void handle(Intent intent) {
-                        ProcessExternalPaymentParcelable parcelable = intent.getParcelableExtra(
-                                DataService.EXTRA_SUCCESS_PARCELABLE);
-                        if (parcelable != null) {
-                            onExternalPaymentProcessed(parcelable.getProcessExternalPayment());
-                        }
-                    }
-                });
-    }
+    private final class Callbacks implements ExternalPaymentProcess.Callbacks {
 
-    private boolean isManageableIntent(Intent intent) {
-        String requestId = intent.getStringExtra(DataService.EXTRA_REQUEST_ID);
-        return requestId != null && requestId.equals(reqId);
+        private final OAuth2Session.OnResponseReady<RequestExternalPayment> requestReady =
+                new OAuth2Session.OnResponseReady<RequestExternalPayment>() {
+
+                    @Override
+                    public void onFailure(Exception exception) {
+                        onOperationFailed();
+                    }
+
+                    @Override
+                    public void onResponse(RequestExternalPayment response) {
+                        onExternalPaymentReceived(response);
+                        hideProgressBar();
+                    }
+                };
+
+        private final OAuth2Session.OnResponseReady<ProcessExternalPayment> processReady =
+                new OAuth2Session.OnResponseReady<ProcessExternalPayment>() {
+
+                    @Override
+                    public void onFailure(Exception exception) {
+                        onOperationFailed();
+                    }
+
+                    @Override
+                    public void onResponse(ProcessExternalPayment response) {
+                        onExternalPaymentProcessed(response);
+                        hideProgressBar();
+                    }
+                };
+
+        @Override
+        public OAuth2Session.OnResponseReady<RequestExternalPayment> getOnRequestCallback() {
+            return requestReady;
+        }
+
+        @Override
+        public OAuth2Session.OnResponseReady<ProcessExternalPayment> getOnProcessCallback() {
+            return processReady;
+        }
     }
 }

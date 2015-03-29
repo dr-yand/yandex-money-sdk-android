@@ -11,6 +11,8 @@ import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.ExternalCard;
 
+import java.math.BigDecimal;
+
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.database.DatabaseStorage;
 import ru.yandex.money.android.formatters.MoneySourceFormatter;
@@ -35,7 +37,7 @@ public class SuccessFragment extends PaymentFragment {
     private View successMarker;
     private TextView description;
 
-    public static SuccessFragment newInstance(String requestId, double contractAmount,
+    public static SuccessFragment newInstance(String requestId, BigDecimal contractAmount,
                                               ExternalCard moneySource) {
 
         Bundle args = new Bundle();

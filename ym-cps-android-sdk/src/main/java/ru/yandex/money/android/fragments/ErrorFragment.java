@@ -22,6 +22,10 @@ public class ErrorFragment extends PaymentFragment {
     private static final String EXTRA_ERROR = "ru.yandex.money.android.extra.ERROR";
     private static final String EXTRA_STATUS = "ru.yandex.money.android.extra.STATUS";
 
+    public static ErrorFragment newInstance() {
+        return newInstance(null, null);
+    }
+
     public static ErrorFragment newInstance(Error error, String status) {
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_ERROR, error);
@@ -96,7 +100,7 @@ public class ErrorFragment extends PaymentFragment {
             action.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getPaymentActivity().requestExternalPayment();
+                    getPaymentActivity().repeat();
                 }
             });
         }

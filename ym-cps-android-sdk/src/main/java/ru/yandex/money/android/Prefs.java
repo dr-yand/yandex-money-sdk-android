@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 /**
- * Created by dvmelnikov on 12/02/14.
+ * @author Dmitriy Melnikov (dvmelnikov@yamoney.ru)
  */
-public class Prefs {
-
-    private static final String TAG = Prefs.class.getName();
+public final class Prefs {
 
     private static final String PREFS_NAME = "ru.yandex.money.android.preferences";
     private static final String PREF_INSTANCE_ID = "ru.yandex.money.android.instanceId";
@@ -20,9 +18,9 @@ public class Prefs {
     }
 
     public void storeInstanceId(String instanceId) {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PREF_INSTANCE_ID, instanceId);
-        editor.apply();
+        prefs.edit()
+                .putString(PREF_INSTANCE_ID, instanceId)
+                .apply();
     }
 
     public String restoreInstanceId() {

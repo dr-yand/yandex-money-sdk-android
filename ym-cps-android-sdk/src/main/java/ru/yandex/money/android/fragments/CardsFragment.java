@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.yandex.money.api.model.ExternalCard;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import ru.yandex.money.android.R;
@@ -31,7 +32,7 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
     private static final String EXTRA_TITLE = "ru.yandex.money.android.extra.TITLE";
     private static final String EXTRA_CONTRACT_AMOUNT = "ru.yandex.money.android.extra.CONTRACT_AMOUNT";
 
-    public static CardsFragment newInstance(String title, double contractAmount) {
+    public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
         args.putString(EXTRA_TITLE, title);
         args.putDouble(EXTRA_CONTRACT_AMOUNT, contractAmount);

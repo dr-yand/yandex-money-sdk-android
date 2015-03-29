@@ -22,6 +22,6 @@ android {
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.0'
+    compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.1-rc2'
     compile 'com.google.code.gson:gson:2.3'
 }

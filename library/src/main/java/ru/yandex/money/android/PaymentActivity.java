@@ -36,16 +36,19 @@ import ru.yandex.money.android.fragments.CscFragment;
 import ru.yandex.money.android.fragments.ErrorFragment;
 import ru.yandex.money.android.fragments.SuccessFragment;
 import ru.yandex.money.android.fragments.WebFragment;
+import ru.yandex.money.android.parcelables.ExternalPaymentProcessSavedStateParcelable;
 import ru.yandex.money.android.utils.Keyboards;
 
 /**
  * @author vyasevich
  */
-public class PaymentActivity extends Activity {
+public final class PaymentActivity extends Activity {
 
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
+
+    private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
 
     private ExternalPaymentProcess process;
     private PaymentArguments arguments;
@@ -94,12 +97,27 @@ public class PaymentActivity extends Activity {
         arguments = new PaymentArguments(getIntent().getBundleExtra(EXTRA_ARGUMENTS));
         cards = new DatabaseStorage(this).selectMoneySources();
 
-        initPaymentProcess();
+        boolean ready = initPaymentProcess();
+        if (!ready) {
+            return;
+        }
+
         if (savedInstanceState == null) {
             proceed();
         } else {
-            // TODO restore state
+            process.restoreSavedState(savedInstanceState
+                    .<ExternalPaymentProcessSavedStateParcelable>getParcelable(
+                            KEY_PROCESS_SAVED_STATE)
+                    .getSavedState());
+            repeat();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(KEY_PROCESS_SAVED_STATE,
+                new ExternalPaymentProcessSavedStateParcelable(process.getSavedState()));
     }
 
     @Override
@@ -186,7 +204,7 @@ public class PaymentActivity extends Activity {
         }
     }
 
-    private void initPaymentProcess() {
+    private boolean initPaymentProcess() {
         String clientId = arguments.getClientId();
         OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
 
@@ -248,6 +266,7 @@ public class PaymentActivity extends Activity {
                                 if (response.isSuccess()) {
                                     prefs.storeInstanceId(response.instanceId);
                                     process.setInstanceId(response.instanceId);
+                                    proceed();
                                 } else {
                                     showError(response.error, response.status.code);
                                 }
@@ -257,11 +276,12 @@ public class PaymentActivity extends Activity {
             } catch (IOException e) {
                 onOperationFailed();
             }
-            return;
+            return false;
         }
 
         process.setInstanceId(instanceId);
         process.setCallbacks(new Callbacks());
+        return true;
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {

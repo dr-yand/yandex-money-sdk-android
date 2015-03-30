@@ -37,13 +37,10 @@ public class PaymentArguments {
     }
 
     public Bundle toBundle() {
-        Bundle parameters = new Bundle();
-        Bundles.writeStringMapToBundle(parameters, params);
-
         Bundle bundle = new Bundle();
         bundle.putString(EXTRA_CLIENT_ID, clientId);
         bundle.putString(EXTRA_PATTERN_ID, patternId);
-        bundle.putBundle(EXTRA_PARAMS, parameters);
+        bundle.putBundle(EXTRA_PARAMS, Bundles.writeStringMapToBundle(params));
         return bundle;
     }
 

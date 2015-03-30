@@ -6,30 +6,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author vyasevich
+ * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
 public final class Bundles {
 
-    public static Bundle createStringMapBundle(Map<String, String> map) {
-        Bundle bundle = new Bundle();
-        writeStringMapToBundle(bundle, map);
-        return bundle;
+    private Bundles() {
     }
 
-    public static void writeStringMapToBundle(Bundle bundle, Map<String, String> map) {
-        if (bundle == null) {
-            throw new NullPointerException("bundle is null");
-        }
+    public static Bundle writeStringMapToBundle(Map<String, String> map) {
         if (map == null) {
             throw new NullPointerException("map is null");
         }
-        if (map.isEmpty()) {
-            return;
-        }
-
+        Bundle bundle = new Bundle();
         for (String key : map.keySet()) {
             bundle.putString(key, map.get(key));
         }
+        return bundle;
     }
 
     public static Map<String, String> readStringMapFromBundle(Bundle bundle) {

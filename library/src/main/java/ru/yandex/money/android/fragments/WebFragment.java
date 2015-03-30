@@ -45,7 +45,7 @@ public final class WebFragment extends PaymentFragment {
 
         Bundle args = new Bundle();
         args.putString(KEY_URL, url);
-        args.putBundle(KEY_POST_DATA, Bundles.createStringMapBundle(postData));
+        args.putBundle(KEY_POST_DATA, Bundles.writeStringMapToBundle(postData));
 
         WebFragment fragment = new WebFragment();
         fragment.setArguments(args);

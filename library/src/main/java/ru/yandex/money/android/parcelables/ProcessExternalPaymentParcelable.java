@@ -27,7 +27,7 @@ public class ProcessExternalPaymentParcelable implements Parcelable {
                 (ProcessExternalPayment.Status) parcel.readSerializable();
         Error error = (Error) parcel.readSerializable();
         String acsUri = parcel.readString();
-        Map<String, String> acsParams = Parcelables.readNullableStringMap(parcel);
+        Map<String, String> acsParams = Parcelables.readStringMap(parcel);
         this.pep = new ProcessExternalPayment(status, error, acsUri, acsParams,
                 readMoneySource(parcel), Parcelables.readNullableLong(parcel),
                 parcel.readString());
@@ -43,7 +43,7 @@ public class ProcessExternalPaymentParcelable implements Parcelable {
         dest.writeSerializable(pep.status);
         dest.writeSerializable(pep.error);
         dest.writeString(pep.acsUri);
-        Parcelables.writeNullableStringMap(dest, pep.acsParams);
+        Parcelables.writeStringMap(dest, pep.acsParams);
         writeMoneySource(dest, flags);
         Parcelables.writeNullableLong(dest, pep.nextRetry);
         dest.writeString(pep.invoiceId);
@@ -53,13 +53,12 @@ public class ProcessExternalPaymentParcelable implements Parcelable {
         ExternalCard moneySource = pep.moneySource;
         ExtendedCardParcelable parcelable = moneySource == null ? null :
                 new ExtendedCardParcelable(moneySource);
-        Parcelables.writeNullableParcelable(dest, parcelable, flags);
+        dest.writeParcelable(parcelable, flags);
     }
 
     private ExternalCard readMoneySource(Parcel parcel) {
-        ExtendedCardParcelable parcelable =
-                (ExtendedCardParcelable) Parcelables.readNullableParcelable(
-                        parcel, ExtendedCardParcelable.class.getClassLoader());
+        ExtendedCardParcelable parcelable = parcel.readParcelable(
+                ExtendedCardParcelable.class.getClassLoader());
         return parcelable == null ? null : parcelable.getExtendedCard();
     }
 

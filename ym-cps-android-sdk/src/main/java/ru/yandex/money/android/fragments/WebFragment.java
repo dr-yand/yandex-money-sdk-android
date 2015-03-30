@@ -3,6 +3,7 @@ package ru.yandex.money.android.fragments;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,9 +12,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.Error;
-import com.yandex.money.api.model.ExternalCard;
 
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EncodingUtils;
@@ -22,62 +21,35 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 
+import ru.yandex.money.android.PaymentArguments;
 import ru.yandex.money.android.R;
-import ru.yandex.money.android.parcelables.ExtendedCardParcelable;
-import ru.yandex.money.android.parcelables.ProcessExternalPaymentParcelable;
-import ru.yandex.money.android.services.DataServiceHelper;
+import ru.yandex.money.android.utils.Bundles;
 
 /**
  * @author vyasevich
  */
-public class WebFragment extends PaymentFragment {
+public final class WebFragment extends PaymentFragment {
 
-    private static final String EXTRA_PROCESS_EXTERNAL_PAYMENT = "ru.yandex.money.android.extra.PROCESS_EXTERNAL_PAYMENT";
+    private static final String KEY_URL = "uri";
+    private static final String KEY_POST_DATA = "postData";
 
     private WebView webView;
 
-    private String requestId;
-    private ProcessExternalPayment pep;
-    private ExternalCard moneySource;
-
-    public static WebFragment newInstance(String requestId) {
-        return newInstance(requestId, null, null);
-    }
-
-    public static WebFragment newInstance(String requestId, ProcessExternalPayment pep,
-                                          ExternalCard moneySource) {
+    public static WebFragment newInstance(String url, Map<String, String> postData) {
+        if (TextUtils.isEmpty(url)) {
+            throw new IllegalArgumentException("url is null or empty");
+        }
+        if (postData == null) {
+            throw new NullPointerException("postData is null");
+        }
 
         Bundle args = new Bundle();
-        args.putString(EXTRA_REQUEST_ID, requestId);
-        if (pep != null) {
-            args.putParcelable(EXTRA_PROCESS_EXTERNAL_PAYMENT,
-                    new ProcessExternalPaymentParcelable(pep));
-        }
-        if (moneySource != null) {
-            args.putParcelable(EXTRA_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
-        }
+        args.putString(KEY_URL, url);
+        args.putBundle(KEY_POST_DATA, Bundles.createStringMapBundle(postData));
 
         WebFragment fragment = new WebFragment();
         fragment.setArguments(args);
         return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Bundle args = getArguments();
-        assert args != null : "specify proper args for WebFragment";
-
-        requestId = args.getString(EXTRA_REQUEST_ID);
-        ProcessExternalPaymentParcelable pepParcelable =
-                args.getParcelable(EXTRA_PROCESS_EXTERNAL_PAYMENT);
-        if (pepParcelable != null) {
-            pep = pepParcelable.getProcessExternalPayment();
-        }
-        ExtendedCardParcelable extendedCardParcelable = args.getParcelable(EXTRA_MONEY_SOURCE);
-        if (extendedCardParcelable != null) {
-            moneySource = extendedCardParcelable.getExtendedCard();
-        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -93,33 +65,16 @@ public class WebFragment extends PaymentFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        if (pep == null) {
-            processExternalPayment();
-        } else {
-            loadPage(pep);
-        }
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Bundle args = getArguments();
+        loadPage(args.getString(KEY_URL), Bundles.readStringMapFromBundle(
+                args.getBundle(KEY_POST_DATA)));
     }
 
-    @Override
-    protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        super.onExternalPaymentProcessed(pep);
-        switch (pep.status) {
-            case SUCCESS:
-                showSuccess(moneySource);
-                break;
-            case EXT_AUTH_REQUIRED:
-                loadPage(pep);
-                break;
-            default:
-                showError(pep.error, pep.status.toString());
-        }
-    }
-
-    private void loadPage(ProcessExternalPayment pep) {
+    private void loadPage(String url, Map<String, String> postParams) {
         showWebView();
-        webView.postUrl(pep.acsUri, buildPostData(pep));
+        webView.postUrl(url, buildPostData(postParams));
     }
 
     private void showProgress() {
@@ -132,20 +87,18 @@ public class WebFragment extends PaymentFragment {
         webView.setVisibility(View.VISIBLE);
     }
 
-    private void processExternalPayment() {
-        reqId = getPaymentActivity().getDataServiceHelper().process(requestId, false);
-    }
-
-    private byte[] buildPostData(ProcessExternalPayment pep) {
+    private byte[] buildPostData(Map<String, String> postParams) {
         String url = "";
-        for (Map.Entry<String, String> entry : pep.acsParams.entrySet()) {
+        for (Map.Entry<String, String> entry : postParams.entrySet()) {
             url += entry.getKey() + "=" + safeUrlEncoding(entry.getValue()) + "&";
         }
+        //noinspection deprecation
         return EncodingUtils.getBytes(url, "BASE64");
     }
 
     private String safeUrlEncoding(String value) {
         try {
+            //noinspection deprecation
             return URLEncoder.encode(value, HTTP.UTF_8);
         } catch (UnsupportedEncodingException e) {
             return value;
@@ -153,31 +106,24 @@ public class WebFragment extends PaymentFragment {
     }
 
     private class Client extends WebViewClient {
-
-        private static final String TAG = "WebViewClient";
-
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            Log.d(TAG, "page started " + url);
-            if (url.contains(DataServiceHelper.SUCCESS_URI)) {
+            Log.d("WebViewClient", "page started " + url);
+            if (url.contains(PaymentArguments.EXT_AUTH_SUCCESS_URI)) {
                 showProgress();
-                if (isAdded()) {
-                    processExternalPayment();
-                }
-            } else if (url.contains(DataServiceHelper.FAIL_URI)) {
+                proceed();
+            } else if (url.contains(PaymentArguments.EXT_AUTH_FAIL_URI)) {
                 showError(Error.AUTHORIZATION_REJECT, null);
             }
         }
     }
 
     private class Chrome extends WebChromeClient {
-
         @Override
         public void onProgressChanged(WebView view, int newProgress) {
             Log.d("Chrome", "progress = " + newProgress);
-            if (newProgress == 0) {
-                showProgressBar();
-            } else if (newProgress == 100) {
+            showProgressBar();
+            if (newProgress == 100) {
                 hideProgressBar();
             }
         }

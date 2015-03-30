@@ -10,6 +10,12 @@ import java.util.Map;
  */
 public final class Bundles {
 
+    public static Bundle createStringMapBundle(Map<String, String> map) {
+        Bundle bundle = new Bundle();
+        writeStringMapToBundle(bundle, map);
+        return bundle;
+    }
+
     public static void writeStringMapToBundle(Bundle bundle, Map<String, String> map) {
         if (bundle == null) {
             throw new NullPointerException("bundle is null");

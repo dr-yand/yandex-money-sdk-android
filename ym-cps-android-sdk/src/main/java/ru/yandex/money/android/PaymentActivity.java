@@ -125,14 +125,8 @@ public class PaymentActivity extends Activity {
         return cards;
     }
 
-    public void showWeb() {
-        replaceFragmentClearBackStack(WebFragment.newInstance(
-                process.getRequestPayment().requestId));
-    }
-
-    public void showWeb(ProcessExternalPayment pep, ExternalCard moneySource) {
-        replaceFragmentAddingToBackStack(WebFragment.newInstance(
-                process.getRequestPayment().requestId, pep, moneySource));
+    public void showWeb(String url, Map<String, String> postData) {
+        replaceFragmentAddingToBackStack(WebFragment.newInstance(url, postData));
     }
 
     public void showCards() {
@@ -251,12 +245,12 @@ public class PaymentActivity extends Activity {
 
             @Override
             public String getExtAuthSuccessUri() {
-                return null;
+                return PaymentArguments.EXT_AUTH_SUCCESS_URI;
             }
 
             @Override
             public String getExtAuthFailUri() {
-                return null;
+                return PaymentArguments.EXT_AUTH_FAIL_URI;
             }
         });
 
@@ -267,17 +261,26 @@ public class PaymentActivity extends Activity {
     private void onExternalPaymentReceived(RequestExternalPayment rep) {
         if (rep.status == BaseRequestPayment.Status.SUCCESS) {
             if (cards.size() == 0) {
-                replaceFragmentClearBackStack(WebFragment.newInstance(rep.requestId));
+                proceed();
             } else {
                 showCards();
             }
         } else {
-            showError(rep.error, rep.status.toString());
+            showError(rep.error, rep.status.code);
         }
     }
 
     private void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        // TODO implement
+        switch (pep.status) {
+            case SUCCESS:
+                showSuccess(pep.moneySource);
+                break;
+            case EXT_AUTH_REQUIRED:
+                showWeb(pep.acsUri, pep.acsParams);
+                break;
+            default:
+                showError(pep.error, pep.status.code);
+        }
     }
 
     private void onOperationFailed() {

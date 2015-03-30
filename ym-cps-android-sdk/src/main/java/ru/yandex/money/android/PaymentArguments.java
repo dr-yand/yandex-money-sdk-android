@@ -12,6 +12,9 @@ import ru.yandex.money.android.utils.Bundles;
  */
 public class PaymentArguments {
 
+    public static final String EXT_AUTH_SUCCESS_URI = "yandex-money-sdk-android://success";
+    public static final String EXT_AUTH_FAIL_URI = "yandex-money-sdk-android://fail";
+
     private static final String EXTRA_CLIENT_ID = "ru.yandex.money.android.extra.CLIENT_ID";
     private static final String EXTRA_PATTERN_ID = "ru.yandex.money.android.extra.PATTERN_ID";
     private static final String EXTRA_PARAMS = "ru.yandex.money.android.extra.PARAMS";

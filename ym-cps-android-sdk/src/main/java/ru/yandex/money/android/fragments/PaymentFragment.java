@@ -2,9 +2,10 @@ package ru.yandex.money.android.fragments;
 
 import android.app.Fragment;
 
-import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
+
+import java.util.Map;
 
 import ru.yandex.money.android.PaymentActivity;
 
@@ -20,20 +21,20 @@ public abstract class PaymentFragment extends Fragment {
         return (PaymentActivity) getActivity();
     }
 
-    protected void showWeb() {
+    protected void proceed() {
         startActionSafely(new Action() {
             @Override
             public void start(PaymentActivity activity) {
-                activity.showWeb();
+                activity.proceed();
             }
         });
     }
 
-    protected void showWeb(final ProcessExternalPayment pep, final ExternalCard moneySource) {
+    protected void showWeb(final String url, final Map<String, String> params) {
         startActionSafely(new Action() {
             @Override
             public void start(PaymentActivity activity) {
-                activity.showWeb(pep, moneySource);
+                activity.showWeb(url, params);
             }
         });
     }

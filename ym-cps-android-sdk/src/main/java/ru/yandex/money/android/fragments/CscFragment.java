@@ -10,8 +10,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.ExternalCard;
+import com.yandex.money.api.model.MoneySource;
 
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.formatters.MoneySourceFormatter;
@@ -24,9 +24,7 @@ import ru.yandex.money.android.utils.Views;
  */
 public class CscFragment extends PaymentFragment {
 
-    private String requestId;
     private ExternalCard moneySource;
-    private CardType cardType;
     private String csc;
 
     private LinearLayout error;
@@ -36,9 +34,8 @@ public class CscFragment extends PaymentFragment {
     private Button cancel;
     private Button pay;
 
-    public static CscFragment newInstance(String requestId, ExternalCard moneySource) {
+    public static CscFragment newInstance(ExternalCard moneySource) {
         Bundle args = new Bundle();
-        args.putString(KEY_REQUEST_ID, requestId);
         args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
 
         CscFragment fragment = new CscFragment();
@@ -55,9 +52,8 @@ public class CscFragment extends PaymentFragment {
         ExtendedCardParcelable extendedCardParcelable = args.getParcelable(KEY_MONEY_SOURCE);
         assert extendedCardParcelable != null : "provide money source for CscFragment";
 
-        requestId = args.getString(KEY_REQUEST_ID);
         moneySource = extendedCardParcelable.getExtendedCard();
-        cardType = CardType.get(moneySource.type);
+        CardType cardType = CardType.get(moneySource.type);
 
         View view = inflater.inflate(R.layout.ym_csc_fragment, container, false);
         assert view != null : "unable to inflate view in CscFragment";
@@ -93,20 +89,12 @@ public class CscFragment extends PaymentFragment {
         return view;
     }
 
-    @Override
-    protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        super.onExternalPaymentProcessed(pep);
-        switch (pep.status) {
-            case SUCCESS:
-                showSuccess(moneySource);
-                break;
-            case EXT_AUTH_REQUIRED:
-                showWeb(pep, moneySource);
-                break;
-            default:
-                showError(pep.error, pep.status.toString());
-        }
-        hideProgressBar();
+    public MoneySource getMoneySource() {
+        return moneySource;
+    }
+
+    public String getCsc() {
+        return csc;
     }
 
     private void setErrorGone() {
@@ -133,8 +121,7 @@ public class CscFragment extends PaymentFragment {
             cancel.setEnabled(false);
             pay.setEnabled(false);
             cscEditText.setEnabled(false);
-            reqId = getPaymentActivity().getDataServiceHelper().process(requestId, moneySource, csc);
-            showProgressBar();
+            proceed();
         } else {
             setErrorVisible(getString(R.string.ym_error_oops_title),
                     getString(R.string.ym_error_csc_invalid));

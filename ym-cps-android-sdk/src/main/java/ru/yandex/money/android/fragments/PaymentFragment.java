@@ -5,8 +5,6 @@ import android.app.Fragment;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 
-import java.util.Map;
-
 import ru.yandex.money.android.PaymentActivity;
 
 /**
@@ -26,15 +24,6 @@ public abstract class PaymentFragment extends Fragment {
             @Override
             public void start(PaymentActivity activity) {
                 activity.proceed();
-            }
-        });
-    }
-
-    protected void showWeb(final String url, final Map<String, String> params) {
-        startActionSafely(new Action() {
-            @Override
-            public void start(PaymentActivity activity) {
-                activity.showWeb(url, params);
             }
         });
     }
@@ -62,15 +51,6 @@ public abstract class PaymentFragment extends Fragment {
             @Override
             public void start(PaymentActivity activity) {
                 activity.showCsc(moneySource);
-            }
-        });
-    }
-
-    protected void showSuccess(final ExternalCard moneySource) {
-        startActionSafely(new Action() {
-            @Override
-            public void start(PaymentActivity activity) {
-                activity.showSuccess(moneySource);
             }
         });
     }

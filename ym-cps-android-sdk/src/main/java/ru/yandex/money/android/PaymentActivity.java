@@ -149,8 +149,7 @@ public class PaymentActivity extends Activity {
     }
 
     public void showCsc(ExternalCard moneySource) {
-        replaceFragmentAddingToBackStack(CscFragment.newInstance(
-                process.getRequestPayment().requestId, moneySource));
+        replaceFragmentAddingToBackStack(CscFragment.newInstance(moneySource));
     }
 
     public void showProgressBar() {
@@ -235,12 +234,12 @@ public class PaymentActivity extends Activity {
 
             @Override
             public MoneySource getMoneySource() {
-                return null;
+                return getCscFragment().getMoneySource();
             }
 
             @Override
             public String getCsc() {
-                return null;
+                return getCscFragment().getCsc();
             }
 
             @Override
@@ -314,6 +313,15 @@ public class PaymentActivity extends Activity {
                 .addToBackStack(fragment.getTag())
                 .commit();
         hideKeyboard();
+    }
+
+    private CscFragment getCscFragment() {
+        Fragment fragment = getFragmentManager().findFragmentById(R.id.ym_container);
+        if (fragment instanceof CscFragment) {
+            return (CscFragment) fragment;
+        } else {
+            throw new IllegalStateException("current fragment: " + fragment);
+        }
     }
 
     private void hideKeyboard() {

@@ -12,13 +12,16 @@ import java.util.Map;
 import ru.yandex.money.android.utils.Parcelables;
 
 /**
- * @author vyasevich
+ * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public class ProcessExternalPaymentParcelable implements Parcelable {
+public final class ProcessExternalPaymentParcelable implements Parcelable {
 
     private final ProcessExternalPayment pep;
 
     public ProcessExternalPaymentParcelable(ProcessExternalPayment pep) {
+        if (pep == null) {
+            throw new NullPointerException("pep is null");
+        }
         this.pep = pep;
     }
 
@@ -51,15 +54,15 @@ public class ProcessExternalPaymentParcelable implements Parcelable {
 
     private void writeMoneySource(Parcel dest, int flags) {
         ExternalCard moneySource = pep.moneySource;
-        ExtendedCardParcelable parcelable = moneySource == null ? null :
-                new ExtendedCardParcelable(moneySource);
+        ExternalCardParcelable parcelable = moneySource == null ? null :
+                new ExternalCardParcelable(moneySource);
         dest.writeParcelable(parcelable, flags);
     }
 
     private ExternalCard readMoneySource(Parcel parcel) {
-        ExtendedCardParcelable parcelable = parcel.readParcelable(
-                ExtendedCardParcelable.class.getClassLoader());
-        return parcelable == null ? null : parcelable.getExtendedCard();
+        ExternalCardParcelable parcelable = parcel.readParcelable(
+                ExternalCardParcelable.class.getClassLoader());
+        return parcelable == null ? null : parcelable.getExternalCard();
     }
 
     public ProcessExternalPayment getProcessExternalPayment() {

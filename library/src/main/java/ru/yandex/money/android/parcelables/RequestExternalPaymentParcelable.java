@@ -11,13 +11,16 @@ import java.math.BigDecimal;
 import ru.yandex.money.android.utils.Parcelables;
 
 /**
- * @author vyasevich
+ * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public class RequestExternalPaymentParcelable implements Parcelable {
+public final class RequestExternalPaymentParcelable implements Parcelable {
 
     private final RequestExternalPayment rep;
 
     public RequestExternalPaymentParcelable(RequestExternalPayment rep) {
+        if (rep == null) {
+            throw new NullPointerException("rep is null");
+        }
         this.rep = rep;
     }
 

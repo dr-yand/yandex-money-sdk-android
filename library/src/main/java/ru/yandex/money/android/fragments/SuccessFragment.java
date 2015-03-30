@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.database.DatabaseStorage;
 import ru.yandex.money.android.formatters.MoneySourceFormatter;
-import ru.yandex.money.android.parcelables.ExtendedCardParcelable;
+import ru.yandex.money.android.parcelables.ExternalCardParcelable;
 import ru.yandex.money.android.utils.CardType;
 import ru.yandex.money.android.utils.Views;
 
@@ -36,7 +36,7 @@ public class SuccessFragment extends PaymentFragment {
         Bundle args = new Bundle();
         args.putString(KEY_CONTRACT_AMOUNT, contractAmount.toPlainString());
         if (moneySource != null) {
-            args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+            args.putParcelable(KEY_MONEY_SOURCE, new ExternalCardParcelable(moneySource));
         }
 
         SuccessFragment frg = new SuccessFragment();
@@ -79,7 +79,7 @@ public class SuccessFragment extends PaymentFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         if (moneySource != null) {
-            outState.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+            outState.putParcelable(KEY_MONEY_SOURCE, new ExternalCardParcelable(moneySource));
         }
     }
 
@@ -120,7 +120,7 @@ public class SuccessFragment extends PaymentFragment {
     }
 
     private ExternalCard getMoneySourceFromBundle(Bundle bundle) {
-        ExtendedCardParcelable parcelable = bundle.getParcelable(KEY_MONEY_SOURCE);
-        return parcelable == null ? null : parcelable.getExtendedCard();
+        ExternalCardParcelable parcelable = bundle.getParcelable(KEY_MONEY_SOURCE);
+        return parcelable == null ? null : parcelable.getExternalCard();
     }
 }

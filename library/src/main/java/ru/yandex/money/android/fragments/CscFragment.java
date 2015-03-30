@@ -15,7 +15,7 @@ import com.yandex.money.api.model.MoneySource;
 
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.formatters.MoneySourceFormatter;
-import ru.yandex.money.android.parcelables.ExtendedCardParcelable;
+import ru.yandex.money.android.parcelables.ExternalCardParcelable;
 import ru.yandex.money.android.utils.CardType;
 import ru.yandex.money.android.utils.Views;
 
@@ -36,7 +36,7 @@ public class CscFragment extends PaymentFragment {
 
     public static CscFragment newInstance(ExternalCard moneySource) {
         Bundle args = new Bundle();
-        args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+        args.putParcelable(KEY_MONEY_SOURCE, new ExternalCardParcelable(moneySource));
 
         CscFragment fragment = new CscFragment();
         fragment.setArguments(args);
@@ -49,10 +49,10 @@ public class CscFragment extends PaymentFragment {
         Bundle args = getArguments();
         assert args != null : "provide correct arguments for CscFragment";
 
-        ExtendedCardParcelable extendedCardParcelable = args.getParcelable(KEY_MONEY_SOURCE);
-        assert extendedCardParcelable != null : "provide money source for CscFragment";
+        ExternalCardParcelable externalCardParcelable = args.getParcelable(KEY_MONEY_SOURCE);
+        assert externalCardParcelable != null : "provide money source for CscFragment";
 
-        moneySource = extendedCardParcelable.getExtendedCard();
+        moneySource = externalCardParcelable.getExternalCard();
         CardType cardType = CardType.get(moneySource.type);
 
         View view = inflater.inflate(R.layout.ym_csc_fragment, container, false);

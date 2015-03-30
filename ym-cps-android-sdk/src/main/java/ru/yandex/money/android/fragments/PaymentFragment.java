@@ -12,7 +12,6 @@ import ru.yandex.money.android.PaymentActivity;
  */
 public abstract class PaymentFragment extends Fragment {
 
-    protected static final String KEY_REQUEST_ID = "requestId";
     protected static final String KEY_MONEY_SOURCE = "moneySource";
 
     protected PaymentActivity getPaymentActivity() {

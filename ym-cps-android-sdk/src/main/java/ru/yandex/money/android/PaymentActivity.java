@@ -23,7 +23,6 @@ import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
 import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
-import com.yandex.money.api.processes.BasePaymentProcess;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
 
 import java.io.IOException;
@@ -144,7 +143,7 @@ public class PaymentActivity extends Activity {
 
     public void showSuccess(ExternalCard moneySource) {
         BaseRequestPayment rp = process.getRequestPayment();
-        replaceFragmentClearBackStack(SuccessFragment.newInstance(rp.requestId, rp.contractAmount,
+        replaceFragmentClearBackStack(SuccessFragment.newInstance(rp.contractAmount,
                 moneySource));
     }
 
@@ -191,6 +190,46 @@ public class PaymentActivity extends Activity {
         String clientId = arguments.getClientId();
         OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
 
+        process = new ExternalPaymentProcess(session,
+                new ExternalPaymentProcess.ParameterProvider() {
+
+                    @Override
+                    public String getPatternId() {
+                        return arguments.getPatternId();
+                    }
+
+                    @Override
+                    public Map<String, String> getPaymentParameters() {
+                        return arguments.getParams();
+                    }
+
+                    @Override
+                    public MoneySource getMoneySource() {
+                        return getCscFragment().getMoneySource();
+                    }
+
+                    @Override
+                    public String getCsc() {
+                        return getCscFragment().getCsc();
+                    }
+
+                    @Override
+                    public String getExtAuthSuccessUri() {
+                        return PaymentArguments.EXT_AUTH_SUCCESS_URI;
+                    }
+
+                    @Override
+                    public String getExtAuthFailUri() {
+                        return PaymentArguments.EXT_AUTH_FAIL_URI;
+                    }
+
+                    @Override
+                    public boolean isRequestToken() {
+                        Fragment fragment = getCurrentFragment();
+                        return fragment instanceof SuccessFragment;
+                    }
+                });
+
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
         if (TextUtils.isEmpty(instanceId)) {
@@ -208,7 +247,7 @@ public class PaymentActivity extends Activity {
                             public void onResponse(InstanceId response) {
                                 if (response.isSuccess()) {
                                     prefs.storeInstanceId(response.instanceId);
-                                    initPaymentProcess();
+                                    process.setInstanceId(response.instanceId);
                                 } else {
                                     showError(response.error, response.status.code);
                                 }
@@ -220,38 +259,6 @@ public class PaymentActivity extends Activity {
             }
             return;
         }
-
-        process = new ExternalPaymentProcess(session, new BasePaymentProcess.ParameterProvider() {
-            @Override
-            public String getPatternId() {
-                return arguments.getPatternId();
-            }
-
-            @Override
-            public Map<String, String> getPaymentParameters() {
-                return arguments.getParams();
-            }
-
-            @Override
-            public MoneySource getMoneySource() {
-                return getCscFragment().getMoneySource();
-            }
-
-            @Override
-            public String getCsc() {
-                return getCscFragment().getCsc();
-            }
-
-            @Override
-            public String getExtAuthSuccessUri() {
-                return PaymentArguments.EXT_AUTH_SUCCESS_URI;
-            }
-
-            @Override
-            public String getExtAuthFailUri() {
-                return PaymentArguments.EXT_AUTH_FAIL_URI;
-            }
-        });
 
         process.setInstanceId(instanceId);
         process.setCallbacks(new Callbacks());
@@ -272,7 +279,12 @@ public class PaymentActivity extends Activity {
     private void onExternalPaymentProcessed(ProcessExternalPayment pep) {
         switch (pep.status) {
             case SUCCESS:
-                showSuccess(pep.moneySource);
+                Fragment fragment = getCurrentFragment();
+                if (fragment instanceof SuccessFragment) {
+                    ((SuccessFragment) fragment).saveCard(pep.moneySource);
+                } else {
+                    showSuccess(pep.moneySource);
+                }
                 break;
             case EXT_AUTH_REQUIRED:
                 showWeb(pep.acsUri, pep.acsParams);
@@ -316,12 +328,16 @@ public class PaymentActivity extends Activity {
     }
 
     private CscFragment getCscFragment() {
-        Fragment fragment = getFragmentManager().findFragmentById(R.id.ym_container);
+        Fragment fragment = getCurrentFragment();
         if (fragment instanceof CscFragment) {
             return (CscFragment) fragment;
         } else {
             throw new IllegalStateException("current fragment: " + fragment);
         }
+    }
+
+    private Fragment getCurrentFragment() {
+        return getFragmentManager().findFragmentById(R.id.ym_container);
     }
 
     private void hideKeyboard() {
@@ -330,7 +346,7 @@ public class PaymentActivity extends Activity {
 
     private void applyResult() {
         BaseProcessPayment pp = process.getProcessPayment();
-        if (pp.status == BaseProcessPayment.Status.SUCCESS) {
+        if (pp != null && pp.status == BaseProcessPayment.Status.SUCCESS) {
             Intent intent = new Intent();
             intent.putExtra(EXTRA_INVOICE_ID, pp.invoiceId);
             setResult(RESULT_OK, intent);

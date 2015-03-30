@@ -7,8 +7,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.yandex.money.api.methods.BaseProcessPayment;
-import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.ExternalCard;
 
 import java.math.BigDecimal;
@@ -25,11 +23,8 @@ import ru.yandex.money.android.utils.Views;
  */
 public class SuccessFragment extends PaymentFragment {
 
-    private static final String EXTRA_CONTRACT_AMOUNT = "ru.yandex.money.android.extra.CONTRACT_AMOUNT";
-    private static final String EXTRA_STATE = "ru.yandex.money.android.extra.STATE";
+    private static final String KEY_CONTRACT_AMOUNT = "contractAmount";
 
-    private String requestId;
-    private State state = State.SUCCESS_SHOWED;
     private ExternalCard moneySource;
 
     private View card;
@@ -37,12 +32,9 @@ public class SuccessFragment extends PaymentFragment {
     private View successMarker;
     private TextView description;
 
-    public static SuccessFragment newInstance(String requestId, BigDecimal contractAmount,
-                                              ExternalCard moneySource) {
-
+    public static SuccessFragment newInstance(BigDecimal contractAmount, ExternalCard moneySource) {
         Bundle args = new Bundle();
-        args.putString(KEY_REQUEST_ID, requestId);
-        args.putDouble(EXTRA_CONTRACT_AMOUNT, contractAmount);
+        args.putString(KEY_CONTRACT_AMOUNT, contractAmount.toPlainString());
         if (moneySource != null) {
             args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
         }
@@ -60,76 +52,42 @@ public class SuccessFragment extends PaymentFragment {
         Bundle args = getArguments();
         assert args != null : "no arguments for SuccessFragment";
 
-        requestId = args.getString(KEY_REQUEST_ID);
         Views.setText(view, R.id.ym_comment, getString(R.string.ym_success_comment,
-                args.getDouble(EXTRA_CONTRACT_AMOUNT)));
+                args.getDouble(KEY_CONTRACT_AMOUNT)));
 
         card = view.findViewById(R.id.ym_card);
         description = (TextView) view.findViewById(R.id.ym_description);
         successMarker = view.findViewById(R.id.ym_success_marker);
         saveCard = (Button) view.findViewById(R.id.ym_save_card);
-
-        if (savedInstanceState == null) {
-            moneySource = getMoneySourceFromBundle(args);
-            if (moneySource != null) {
-                state = State.CARD_EXISTS;
+        saveCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onSaveCardClicked();
             }
-        } else {
-            state = (State) savedInstanceState.getSerializable(EXTRA_STATE);
-            moneySource = getMoneySourceFromBundle(savedInstanceState);
+        });
+
+        moneySource = getMoneySourceFromBundle(savedInstanceState == null ? args :
+                savedInstanceState);
+        if (moneySource != null) {
+            onCardExists();
         }
 
         return view;
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        applyState();
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable(EXTRA_STATE, state);
         if (moneySource != null) {
             outState.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
         }
     }
 
-    @Override
-    protected void onExternalPaymentProcessed(ProcessExternalPayment pep) {
-        super.onExternalPaymentProcessed(pep);
-        if (pep.status == BaseProcessPayment.Status.SUCCESS) {
-            moneySource = pep.moneySource;
-            new DatabaseStorage(getPaymentActivity()).insertMoneySource(moneySource);
-            state = State.SAVING_COMPLETED;
-            onCardSaved();
-        } else {
-            showError(pep.error, pep.status.toString());
-        }
-    }
-
-    private void applyState() {
-        switch (state) {
-            case SUCCESS_SHOWED:
-                saveCard.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onSaveCardClicked();
-                    }
-                });
-                break;
-            case SAVING_INITIATED:
-                onSaveCardClicked();
-                break;
-            case SAVING_COMPLETED:
-                onCardSaved();
-                break;
-            case CARD_EXISTS:
-                onCardExists();
-                break;
-        }
+    public void saveCard(ExternalCard moneySource) {
+        this.moneySource = moneySource;
+        new DatabaseStorage(getPaymentActivity())
+                .insertMoneySource(moneySource);
+        onCardSaved();
     }
 
     private void onSaveCardClicked() {
@@ -138,8 +96,7 @@ public class SuccessFragment extends PaymentFragment {
         saveCard.setText(R.string.ym_success_saving_card);
         saveCard.setOnClickListener(null);
         description.setText(R.string.ym_success_saving_card_description);
-        reqId = getPaymentActivity().getDataServiceHelper().process(requestId, true);
-        state = State.SAVING_INITIATED;
+        proceed();
     }
 
     private void onCardSaved() {
@@ -165,12 +122,5 @@ public class SuccessFragment extends PaymentFragment {
     private ExternalCard getMoneySourceFromBundle(Bundle bundle) {
         ExtendedCardParcelable parcelable = bundle.getParcelable(KEY_MONEY_SOURCE);
         return parcelable == null ? null : parcelable.getExtendedCard();
-    }
-
-    private enum State {
-        SUCCESS_SHOWED,
-        SAVING_INITIATED,
-        SAVING_COMPLETED,
-        CARD_EXISTS
     }
 }

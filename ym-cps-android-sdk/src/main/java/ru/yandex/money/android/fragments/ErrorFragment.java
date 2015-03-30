@@ -18,10 +18,10 @@ import ru.yandex.money.android.utils.Views;
  */
 public class ErrorFragment extends PaymentFragment {
 
-    private static final String TAG = "ErrorFragment";
+    private static final String TAG = ErrorFragment.class.getName();
 
-    private static final String EXTRA_ERROR = "ru.yandex.money.android.extra.ERROR";
-    private static final String EXTRA_STATUS = "ru.yandex.money.android.extra.STATUS";
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_STATUS = "status";
 
     public static ErrorFragment newInstance() {
         return newInstance(null, null);
@@ -29,8 +29,8 @@ public class ErrorFragment extends PaymentFragment {
 
     public static ErrorFragment newInstance(Error error, String status) {
         Bundle args = new Bundle();
-        args.putSerializable(EXTRA_ERROR, error);
-        args.putString(EXTRA_STATUS, status);
+        args.putSerializable(KEY_ERROR, error);
+        args.putString(KEY_STATUS, status);
 
         ErrorFragment frg = new ErrorFragment();
         frg.setArguments(args);
@@ -45,7 +45,7 @@ public class ErrorFragment extends PaymentFragment {
         Bundle args = getArguments();
         assert args != null : "you did not pass mandatory arguments for ErrorFragment";
 
-        showError(view, (Error) args.getSerializable(EXTRA_ERROR), args.getString(EXTRA_STATUS));
+        showError(view, (Error) args.getSerializable(KEY_ERROR), args.getString(KEY_STATUS));
         return view;
     }
 

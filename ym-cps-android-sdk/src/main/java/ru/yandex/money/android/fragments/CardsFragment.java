@@ -29,13 +29,13 @@ import ru.yandex.money.android.utils.Views;
  */
 public class CardsFragment extends PaymentFragment implements AdapterView.OnItemClickListener {
 
-    private static final String EXTRA_TITLE = "ru.yandex.money.android.extra.TITLE";
-    private static final String EXTRA_CONTRACT_AMOUNT = "ru.yandex.money.android.extra.CONTRACT_AMOUNT";
+    private static final String KEY_TITLE = "title";
+    private static final String KEY_CONTRACT_AMOUNT = "contractAmount";
 
     public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
-        args.putString(EXTRA_TITLE, title);
-        args.putDouble(EXTRA_CONTRACT_AMOUNT, contractAmount);
+        args.putString(KEY_TITLE, title);
+        args.putString(KEY_CONTRACT_AMOUNT, contractAmount.toPlainString());
 
         CardsFragment fragment = new CardsFragment();
         fragment.setArguments(args);
@@ -51,9 +51,9 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
         Bundle args = getArguments();
         assert args != null : "specify proper arguments for CardsFragment";
 
-        Views.setText(view, R.id.ym_payment_name, args.getString(EXTRA_TITLE));
+        Views.setText(view, R.id.ym_payment_name, args.getString(KEY_TITLE));
         Views.setText(view, R.id.ym_payment_sum, getString(R.string.ym_cards_payment_sum_value,
-                args.getDouble(EXTRA_CONTRACT_AMOUNT)));
+                new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
         ListView list = (ListView) view.findViewById(android.R.id.list);
         list.setAdapter(new CardsAdapter());
@@ -66,7 +66,7 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ExternalCard moneySource = (ExternalCard) parent.getItemAtPosition(position);
         if (moneySource == null) {
-            showWeb();
+            proceed();
         } else {
             showCsc(moneySource);
         }

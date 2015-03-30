@@ -41,10 +41,10 @@ public class SuccessFragment extends PaymentFragment {
                                               ExternalCard moneySource) {
 
         Bundle args = new Bundle();
-        args.putString(EXTRA_REQUEST_ID, requestId);
+        args.putString(KEY_REQUEST_ID, requestId);
         args.putDouble(EXTRA_CONTRACT_AMOUNT, contractAmount);
         if (moneySource != null) {
-            args.putParcelable(EXTRA_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+            args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
         }
 
         SuccessFragment frg = new SuccessFragment();
@@ -60,7 +60,7 @@ public class SuccessFragment extends PaymentFragment {
         Bundle args = getArguments();
         assert args != null : "no arguments for SuccessFragment";
 
-        requestId = args.getString(EXTRA_REQUEST_ID);
+        requestId = args.getString(KEY_REQUEST_ID);
         Views.setText(view, R.id.ym_comment, getString(R.string.ym_success_comment,
                 args.getDouble(EXTRA_CONTRACT_AMOUNT)));
 
@@ -93,7 +93,7 @@ public class SuccessFragment extends PaymentFragment {
         super.onSaveInstanceState(outState);
         outState.putSerializable(EXTRA_STATE, state);
         if (moneySource != null) {
-            outState.putParcelable(EXTRA_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+            outState.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
         }
     }
 
@@ -163,7 +163,7 @@ public class SuccessFragment extends PaymentFragment {
     }
 
     private ExternalCard getMoneySourceFromBundle(Bundle bundle) {
-        ExtendedCardParcelable parcelable = bundle.getParcelable(EXTRA_MONEY_SOURCE);
+        ExtendedCardParcelable parcelable = bundle.getParcelable(KEY_MONEY_SOURCE);
         return parcelable == null ? null : parcelable.getExtendedCard();
     }
 

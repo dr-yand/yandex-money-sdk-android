@@ -38,8 +38,8 @@ public class CscFragment extends PaymentFragment {
 
     public static CscFragment newInstance(String requestId, ExternalCard moneySource) {
         Bundle args = new Bundle();
-        args.putString(EXTRA_REQUEST_ID, requestId);
-        args.putParcelable(EXTRA_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
+        args.putString(KEY_REQUEST_ID, requestId);
+        args.putParcelable(KEY_MONEY_SOURCE, new ExtendedCardParcelable(moneySource));
 
         CscFragment fragment = new CscFragment();
         fragment.setArguments(args);
@@ -52,10 +52,10 @@ public class CscFragment extends PaymentFragment {
         Bundle args = getArguments();
         assert args != null : "provide correct arguments for CscFragment";
 
-        ExtendedCardParcelable extendedCardParcelable = args.getParcelable(EXTRA_MONEY_SOURCE);
+        ExtendedCardParcelable extendedCardParcelable = args.getParcelable(KEY_MONEY_SOURCE);
         assert extendedCardParcelable != null : "provide money source for CscFragment";
 
-        requestId = args.getString(EXTRA_REQUEST_ID);
+        requestId = args.getString(KEY_REQUEST_ID);
         moneySource = extendedCardParcelable.getExtendedCard();
         cardType = CardType.get(moneySource.type);
 

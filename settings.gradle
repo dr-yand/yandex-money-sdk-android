@@ -1,1 +1,1 @@
-include ':ym-cps-android-sdk', ':sample'
+include ':library', ':sample'

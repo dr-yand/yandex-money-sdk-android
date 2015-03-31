@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'bintray-release'
 
 android {
     compileSdkVersion 22
@@ -9,11 +10,29 @@ android {
         minSdkVersion 14
         targetSdkVersion 22
         versionCode 2
-        versionName "2.0"
+        versionName theVersionName()
     }
+
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+def theVersionName() {
+    return "2.0-rc1"
 }
 
 dependencies {
     compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.1'
     compile 'com.google.code.gson:gson:2.3'
+}
+
+publish {
+    userOrg = 'yandex-money'
+    groupId = 'com.yandex.money.api'
+    artifactId = 'yandex-money-sdk-android'
+    version = theVersionName()
+    website = 'https://github.com/yandex-money/yandex-money-sdk-android'
+    issueTracker = "${website}/issues"
+    repository = "${website}.git"
 }

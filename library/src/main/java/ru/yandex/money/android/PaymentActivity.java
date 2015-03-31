@@ -38,6 +38,7 @@ import ru.yandex.money.android.fragments.SuccessFragment;
 import ru.yandex.money.android.fragments.WebFragment;
 import ru.yandex.money.android.parcelables.ExternalPaymentProcessSavedStateParcelable;
 import ru.yandex.money.android.utils.Keyboards;
+import ru.yandex.money.android.utils.OnResponseReady;
 
 /**
  * @author vyasevich
@@ -254,15 +255,16 @@ public final class PaymentActivity extends Activity {
             showProgressBar();
             try {
                 session.enqueue(new InstanceId.Request(clientId),
-                        new OAuth2Session.OnResponseReady<InstanceId>() {
+                        new OnResponseReady<InstanceId>() {
 
                             @Override
-                            public void onFailure(Exception exception) {
+                            public void failure(Exception exception) {
+                                exception.printStackTrace();
                                 onOperationFailed();
                             }
 
                             @Override
-                            public void onResponse(InstanceId response) {
+                            public void response(InstanceId response) {
                                 if (response.isSuccess()) {
                                     prefs.storeInstanceId(response.instanceId);
                                     process.setInstanceId(response.instanceId);
@@ -378,30 +380,30 @@ public final class PaymentActivity extends Activity {
     private final class Callbacks implements ExternalPaymentProcess.Callbacks {
 
         private final OAuth2Session.OnResponseReady<RequestExternalPayment> requestReady =
-                new OAuth2Session.OnResponseReady<RequestExternalPayment>() {
+                new OnResponseReady<RequestExternalPayment>() {
 
                     @Override
-                    public void onFailure(Exception exception) {
+                    public void failure(Exception exception) {
                         onOperationFailed();
                     }
 
                     @Override
-                    public void onResponse(RequestExternalPayment response) {
+                    public void response(RequestExternalPayment response) {
                         onExternalPaymentReceived(response);
                         hideProgressBar();
                     }
                 };
 
         private final OAuth2Session.OnResponseReady<ProcessExternalPayment> processReady =
-                new OAuth2Session.OnResponseReady<ProcessExternalPayment>() {
+                new OnResponseReady<ProcessExternalPayment>() {
 
                     @Override
-                    public void onFailure(Exception exception) {
+                    public void failure(Exception exception) {
                         onOperationFailed();
                     }
 
                     @Override
-                    public void onResponse(ProcessExternalPayment response) {
+                    public void response(ProcessExternalPayment response) {
                         onExternalPaymentProcessed(response);
                         hideProgressBar();
                     }

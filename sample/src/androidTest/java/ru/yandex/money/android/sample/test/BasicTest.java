@@ -4,8 +4,8 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.test.ActivityInstrumentationTestCase2;
 
-import com.jayway.android.robotium.solo.By;
-import com.jayway.android.robotium.solo.Solo;
+import com.robotium.solo.By;
+import com.robotium.solo.Solo;
 
 import ru.yandex.money.android.sample.MainActivity;
 

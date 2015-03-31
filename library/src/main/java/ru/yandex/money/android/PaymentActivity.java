@@ -1,9 +1,11 @@
 package ru.yandex.money.android;
 
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -36,6 +38,7 @@ import ru.yandex.money.android.fragments.CscFragment;
 import ru.yandex.money.android.fragments.ErrorFragment;
 import ru.yandex.money.android.fragments.SuccessFragment;
 import ru.yandex.money.android.fragments.WebFragment;
+import ru.yandex.money.android.parcelables.ExternalCardParcelable;
 import ru.yandex.money.android.parcelables.ExternalPaymentProcessSavedStateParcelable;
 import ru.yandex.money.android.utils.Keyboards;
 import ru.yandex.money.android.utils.OnResponseReady;
@@ -50,10 +53,14 @@ public final class PaymentActivity extends Activity {
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
 
     private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
+    private static final String KEY_SELECTED_CARD = "selectedCard";
 
     private ExternalPaymentProcess process;
+    private ExternalPaymentProcess.ParameterProvider parameterProvider;
     private PaymentArguments arguments;
     private List<ExternalCard> cards;
+    private ExternalCard selectedCard;
+    private Call call;
 
     public static void startActivityForResult(Activity activity, String clientId,
                                               P2pParams params, int requestCode) {
@@ -110,6 +117,11 @@ public final class PaymentActivity extends Activity {
                     .<ExternalPaymentProcessSavedStateParcelable>getParcelable(
                             KEY_PROCESS_SAVED_STATE)
                     .getSavedState());
+            if (savedInstanceState.containsKey(KEY_SELECTED_CARD)) {
+                selectedCard = savedInstanceState
+                        .<ExternalCardParcelable>getParcelable(KEY_SELECTED_CARD)
+                        .getExternalCard();
+            }
         }
     }
 
@@ -118,6 +130,9 @@ public final class PaymentActivity extends Activity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_PROCESS_SAVED_STATE,
                 new ExternalPaymentProcessSavedStateParcelable(process.getSavedState()));
+        if (selectedCard != null) {
+            outState.putParcelable(KEY_SELECTED_CARD, new ExternalCardParcelable(selectedCard));
+        }
     }
 
     @Override
@@ -133,9 +148,19 @@ public final class PaymentActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        applyResult();
-        hideProgressBar();
         super.onBackPressed();
+        if (call != null) {
+            call.cancel();
+        }
+        Fragment fragment = getCurrentFragment();
+        if (fragment instanceof CscFragment) {
+            super.onBackPressed();
+            fragment = getCurrentFragment();
+        }
+        if (fragment instanceof CardsFragment) {
+            process.reset();
+            proceed();
+        }
     }
 
     public List<ExternalCard> getCards() {
@@ -143,30 +168,33 @@ public final class PaymentActivity extends Activity {
     }
 
     public void showWeb(String url, Map<String, String> postData) {
-        replaceFragmentClearBackStack(WebFragment.newInstance(url, postData));
+        Fragment fragment = getCurrentFragment();
+        boolean clearBackStack = !(fragment instanceof CardsFragment ||
+                fragment instanceof CscFragment);
+        replaceFragment(WebFragment.newInstance(url, postData), clearBackStack);
     }
 
     public void showCards() {
         RequestExternalPayment rep = (RequestExternalPayment) process.getRequestPayment();
-        replaceFragmentClearBackStack(CardsFragment.newInstance(rep.title, rep.contractAmount));
+        replaceFragment(CardsFragment.newInstance(rep.title, rep.contractAmount), true);
     }
 
     public void showError(Error error, String status) {
-        replaceFragmentClearBackStack(ErrorFragment.newInstance(error, status));
+        replaceFragment(ErrorFragment.newInstance(error, status), true);
     }
 
     public void showUnknownError() {
-        replaceFragmentClearBackStack(ErrorFragment.newInstance());
+        replaceFragment(ErrorFragment.newInstance(), true);
     }
 
     public void showSuccess(ExternalCard moneySource) {
-        BaseRequestPayment rp = process.getRequestPayment();
-        replaceFragmentClearBackStack(SuccessFragment.newInstance(rp.contractAmount,
-                moneySource));
+        replaceFragment(SuccessFragment.newInstance(process.getRequestPayment().contractAmount,
+                moneySource), true);
     }
 
-    public void showCsc(ExternalCard moneySource) {
-        replaceFragmentAddingToBackStack(CscFragment.newInstance(moneySource));
+    public void showCsc(ExternalCard externalCard) {
+        selectedCard = externalCard;
+        replaceFragment(CscFragment.newInstance(externalCard), false);
     }
 
     public void showProgressBar() {
@@ -178,7 +206,7 @@ public final class PaymentActivity extends Activity {
     }
 
     public void proceed() {
-        performOperation(new Callable<Call>() {
+        call = performOperation(new Callable<Call>() {
             @Override
             public Call call() throws Exception {
                 return process.proceedAsync();
@@ -187,7 +215,7 @@ public final class PaymentActivity extends Activity {
     }
 
     public void repeat() {
-        performOperation(new Callable<Call>() {
+        call = performOperation(new Callable<Call>() {
             @Override
             public Call call() throws Exception {
                 return process.repeatAsync();
@@ -195,12 +223,13 @@ public final class PaymentActivity extends Activity {
         });
     }
 
-    private void performOperation(Callable<Call> operation) {
+    private Call performOperation(Callable<Call> operation) {
         showProgressBar();
         try {
-            operation.call();
+            return operation.call();
         } catch (Exception e) {
             onOperationFailed();
+            return null;
         }
     }
 
@@ -208,49 +237,47 @@ public final class PaymentActivity extends Activity {
         String clientId = arguments.getClientId();
         OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
 
-        process = new ExternalPaymentProcess(session,
-                new ExternalPaymentProcess.ParameterProvider() {
+        parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
+            @Override
+            public String getPatternId() {
+                return arguments.getPatternId();
+            }
 
-                    @Override
-                    public String getPatternId() {
-                        return arguments.getPatternId();
-                    }
+            @Override
+            public Map<String, String> getPaymentParameters() {
+                return arguments.getParams();
+            }
 
-                    @Override
-                    public Map<String, String> getPaymentParameters() {
-                        return arguments.getParams();
-                    }
+            @Override
+            public MoneySource getMoneySource() {
+                return selectedCard;
+            }
 
-                    @Override
-                    public MoneySource getMoneySource() {
-                        Fragment fragment = getCurrentFragment();
-                        return fragment instanceof CscFragment ?
-                                ((CscFragment) fragment).getMoneySource() : null;
-                    }
+            @Override
+            public String getCsc() {
+                Fragment fragment = getCurrentFragment();
+                return fragment instanceof CscFragment ?
+                        ((CscFragment) fragment).getCsc() : null;
+            }
 
-                    @Override
-                    public String getCsc() {
-                        Fragment fragment = getCurrentFragment();
-                        return fragment instanceof CscFragment ?
-                                ((CscFragment) fragment).getCsc() : null;
-                    }
+            @Override
+            public String getExtAuthSuccessUri() {
+                return PaymentArguments.EXT_AUTH_SUCCESS_URI;
+            }
 
-                    @Override
-                    public String getExtAuthSuccessUri() {
-                        return PaymentArguments.EXT_AUTH_SUCCESS_URI;
-                    }
+            @Override
+            public String getExtAuthFailUri() {
+                return PaymentArguments.EXT_AUTH_FAIL_URI;
+            }
 
-                    @Override
-                    public String getExtAuthFailUri() {
-                        return PaymentArguments.EXT_AUTH_FAIL_URI;
-                    }
+            @Override
+            public boolean isRequestToken() {
+                Fragment fragment = getCurrentFragment();
+                return fragment instanceof SuccessFragment;
+            }
+        };
 
-                    @Override
-                    public boolean isRequestToken() {
-                        Fragment fragment = getCurrentFragment();
-                        return fragment instanceof SuccessFragment;
-                    }
-                });
+        process = new ExternalPaymentProcess(session, parameterProvider);
 
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
@@ -306,7 +333,7 @@ public final class PaymentActivity extends Activity {
             case SUCCESS:
                 Fragment fragment = getCurrentFragment();
                 if (!(fragment instanceof SuccessFragment)) {
-                    showSuccess(pep.moneySource);
+                    showSuccess((ExternalCard) parameterProvider.getMoneySource());
                 } else if (pep.moneySource != null) {
                     ((SuccessFragment) fragment).saveCard(pep.moneySource);
                 }
@@ -324,31 +351,24 @@ public final class PaymentActivity extends Activity {
         hideProgressBar();
     }
 
-    private void replaceFragmentClearBackStack(Fragment fragment) {
+    private void replaceFragment(Fragment fragment, boolean clearBackStack) {
         if (fragment == null) {
             return;
         }
 
-        hideProgressBar();
-        getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.ym_container, fragment)
-                .commit();
-        hideKeyboard();
-    }
-
-    private void replaceFragmentAddingToBackStack(Fragment fragment) {
-        if (fragment == null) {
-            return;
+        Fragment currentFragment = getCurrentFragment();
+        FragmentManager manager = getFragmentManager();
+        if (clearBackStack) {
+            manager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        hideProgressBar();
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.ym_container, fragment)
-                .addToBackStack(fragment.getTag())
-                .commit();
+        @SuppressLint("CommitTransaction")
+        FragmentTransaction transaction = manager.beginTransaction()
+                .replace(R.id.ym_container, fragment);
+        if (!clearBackStack && currentFragment != null) {
+            transaction.addToBackStack(fragment.getTag());
+        }
+        transaction.commit();
         hideKeyboard();
     }
 

@@ -47,13 +47,8 @@ public class SuccessFragment extends PaymentFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.ym_success_fragment, container, false);
-        assert view != null : "view is null";
-
-        Bundle args = getArguments();
-        assert args != null : "no arguments for SuccessFragment";
-
         Views.setText(view, R.id.ym_comment, getString(R.string.ym_success_comment,
-                new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
+                new BigDecimal(getArguments().getString(KEY_CONTRACT_AMOUNT))));
 
         card = view.findViewById(R.id.ym_card);
         description = (TextView) view.findViewById(R.id.ym_description);
@@ -66,13 +61,17 @@ public class SuccessFragment extends PaymentFragment {
             }
         });
 
-        moneySource = getMoneySourceFromBundle(savedInstanceState == null ? args :
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        moneySource = getMoneySourceFromBundle(savedInstanceState == null ? getArguments() :
                 savedInstanceState);
         if (moneySource != null) {
             onCardExists();
         }
-
-        return view;
     }
 
     @Override

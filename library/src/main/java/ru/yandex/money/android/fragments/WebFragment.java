@@ -1,7 +1,6 @@
 package ru.yandex.money.android.fragments;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -105,24 +104,32 @@ public final class WebFragment extends PaymentFragment {
 
     private class Client extends WebViewClient {
         @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            Log.d("WebViewClient", "page started " + url);
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            Log.d("WebViewClient", "loading " + url);
+            boolean completed = false;
             if (url.contains(PaymentArguments.EXT_AUTH_SUCCESS_URI)) {
+                completed = true;
                 hideWebView();
                 proceed();
             } else if (url.contains(PaymentArguments.EXT_AUTH_FAIL_URI)) {
+                completed = true;
                 showError(Error.AUTHORIZATION_REJECT, null);
             }
+            if (completed) {
+                hideProgressBar();
+            }
+            return completed || super.shouldOverrideUrlLoading(view, url);
         }
     }
 
     private class Chrome extends WebChromeClient {
         @Override
         public void onProgressChanged(WebView view, int newProgress) {
-            Log.d("Chrome", "progress = " + newProgress);
-            showProgressBar();
+            Log.d("WebChromeClient", "progress = " + newProgress);
             if (newProgress == 100) {
                 hideProgressBar();
+            } else {
+                showProgressBar();
             }
         }
     }

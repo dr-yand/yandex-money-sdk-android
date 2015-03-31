@@ -77,13 +77,11 @@ public final class WebFragment extends PaymentFragment {
         webView.postUrl(url, buildPostData(postParams));
     }
 
-    private void showProgress() {
-        showProgressBar();
+    private void hideWebView() {
         webView.setVisibility(View.GONE);
     }
 
     private void showWebView() {
-        hideProgressBar();
         webView.setVisibility(View.VISIBLE);
     }
 
@@ -110,7 +108,7 @@ public final class WebFragment extends PaymentFragment {
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             Log.d("WebViewClient", "page started " + url);
             if (url.contains(PaymentArguments.EXT_AUTH_SUCCESS_URI)) {
-                showProgress();
+                hideWebView();
                 proceed();
             } else if (url.contains(PaymentArguments.EXT_AUTH_FAIL_URI)) {
                 showError(Error.AUTHORIZATION_REJECT, null);

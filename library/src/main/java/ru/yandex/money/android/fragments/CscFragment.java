@@ -11,8 +11,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.yandex.money.api.model.ExternalCard;
-import com.yandex.money.api.model.MoneySource;
 
+import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.R;
 import ru.yandex.money.android.formatters.MoneySourceFormatter;
 import ru.yandex.money.android.parcelables.ExternalCardParcelable;
@@ -89,10 +89,6 @@ public class CscFragment extends PaymentFragment {
         return view;
     }
 
-    public MoneySource getMoneySource() {
-        return moneySource;
-    }
-
     public String getCsc() {
         return csc;
     }
@@ -112,13 +108,18 @@ public class CscFragment extends PaymentFragment {
     }
 
     private void onCancelClicked() {
-        showCards();
+        startActionSafely(new Action() {
+            @Override
+            public void start(PaymentActivity activity) {
+                activity.cancel();
+                activity.showCards();
+            }
+        });
     }
 
     private void onPayClicked() {
         if (valid()) {
             setErrorGone();
-            cancel.setEnabled(false);
             pay.setEnabled(false);
             cscEditText.setEnabled(false);
             proceed();

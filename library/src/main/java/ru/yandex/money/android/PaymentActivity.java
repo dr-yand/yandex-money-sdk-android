@@ -27,7 +27,6 @@ import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -161,6 +160,7 @@ public final class PaymentActivity extends Activity {
             process.reset();
             proceed();
         }
+        applyResult();
     }
 
     public List<ExternalCard> getCards() {
@@ -223,6 +223,12 @@ public final class PaymentActivity extends Activity {
         });
     }
 
+    public void cancel() {
+        if (call != null) {
+            call.cancel();
+        }
+    }
+
     private Call performOperation(Callable<Call> operation) {
         showProgressBar();
         try {
@@ -234,8 +240,8 @@ public final class PaymentActivity extends Activity {
     }
 
     private boolean initPaymentProcess() {
-        String clientId = arguments.getClientId();
-        OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
+        final String clientId = arguments.getClientId();
+        final OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override
@@ -282,32 +288,32 @@ public final class PaymentActivity extends Activity {
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
         if (TextUtils.isEmpty(instanceId)) {
-            showProgressBar();
-            try {
-                session.enqueue(new InstanceId.Request(clientId),
-                        new OnResponseReady<InstanceId>() {
+            call = performOperation(new Callable<Call>() {
+                @Override
+                public Call call() throws Exception {
+                    return session.enqueue(new InstanceId.Request(clientId),
+                            new OnResponseReady<InstanceId>() {
 
-                            @Override
-                            public void failure(Exception exception) {
-                                exception.printStackTrace();
-                                onOperationFailed();
-                            }
+                        @Override
+                        public void failure(Exception exception) {
+                            exception.printStackTrace();
+                            onOperationFailed();
+                        }
 
-                            @Override
-                            public void response(InstanceId response) {
-                                if (response.isSuccess()) {
-                                    prefs.storeInstanceId(response.instanceId);
-                                    process.setInstanceId(response.instanceId);
-                                    proceed();
-                                } else {
-                                    showError(response.error, response.status.code);
-                                }
-                                hideProgressBar();
+                        @Override
+                        public void response(InstanceId response) {
+                            if (response.isSuccess()) {
+                                prefs.storeInstanceId(response.instanceId);
+                                process.setInstanceId(response.instanceId);
+                                proceed();
+                            } else {
+                                showError(response.error, response.status.code);
                             }
-                });
-            } catch (IOException e) {
-                onOperationFailed();
-            }
+                            hideProgressBar();
+                        }
+                    });
+                }
+            });
             return false;
         }
 

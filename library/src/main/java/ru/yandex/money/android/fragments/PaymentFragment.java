@@ -36,15 +36,6 @@ public abstract class PaymentFragment extends Fragment {
         });
     }
 
-    protected void showCards() {
-        startActionSafely(new Action() {
-            @Override
-            public void start(PaymentActivity activity) {
-                activity.showCards();
-            }
-        });
-    }
-
     protected void showError(final Error error, final String status) {
         startActionSafely(new Action() {
             @Override

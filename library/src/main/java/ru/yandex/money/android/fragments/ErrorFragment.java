@@ -104,7 +104,8 @@ public class ErrorFragment extends PaymentFragment {
                     startActionSafely(new Action() {
                         @Override
                         public void start(PaymentActivity activity) {
-                            activity.repeat(); // TODO review actions
+                            action.setEnabled(false);
+                            activity.reset();
                         }
                     });
                 }

@@ -157,8 +157,7 @@ public final class PaymentActivity extends Activity {
             fragment = getCurrentFragment();
         }
         if (fragment instanceof CardsFragment) {
-            process.reset();
-            proceed();
+            reset();
         }
         applyResult();
     }
@@ -221,6 +220,11 @@ public final class PaymentActivity extends Activity {
                 return process.repeatAsync();
             }
         });
+    }
+
+    public void reset() {
+        process.reset();
+        proceed();
     }
 
     public void cancel() {

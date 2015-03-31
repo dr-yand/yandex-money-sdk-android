@@ -110,7 +110,6 @@ public final class PaymentActivity extends Activity {
                     .<ExternalPaymentProcessSavedStateParcelable>getParcelable(
                             KEY_PROCESS_SAVED_STATE)
                     .getSavedState());
-            repeat();
         }
     }
 
@@ -144,7 +143,7 @@ public final class PaymentActivity extends Activity {
     }
 
     public void showWeb(String url, Map<String, String> postData) {
-        replaceFragmentAddingToBackStack(WebFragment.newInstance(url, postData));
+        replaceFragmentClearBackStack(WebFragment.newInstance(url, postData));
     }
 
     public void showCards() {
@@ -224,12 +223,16 @@ public final class PaymentActivity extends Activity {
 
                     @Override
                     public MoneySource getMoneySource() {
-                        return getCscFragment().getMoneySource();
+                        Fragment fragment = getCurrentFragment();
+                        return fragment instanceof CscFragment ?
+                                ((CscFragment) fragment).getMoneySource() : null;
                     }
 
                     @Override
                     public String getCsc() {
-                        return getCscFragment().getCsc();
+                        Fragment fragment = getCurrentFragment();
+                        return fragment instanceof CscFragment ?
+                                ((CscFragment) fragment).getCsc() : null;
                     }
 
                     @Override
@@ -302,10 +305,10 @@ public final class PaymentActivity extends Activity {
         switch (pep.status) {
             case SUCCESS:
                 Fragment fragment = getCurrentFragment();
-                if (fragment instanceof SuccessFragment) {
-                    ((SuccessFragment) fragment).saveCard(pep.moneySource);
-                } else {
+                if (!(fragment instanceof SuccessFragment)) {
                     showSuccess(pep.moneySource);
+                } else if (pep.moneySource != null) {
+                    ((SuccessFragment) fragment).saveCard(pep.moneySource);
                 }
                 break;
             case EXT_AUTH_REQUIRED:
@@ -347,15 +350,6 @@ public final class PaymentActivity extends Activity {
                 .addToBackStack(fragment.getTag())
                 .commit();
         hideKeyboard();
-    }
-
-    private CscFragment getCscFragment() {
-        Fragment fragment = getCurrentFragment();
-        if (fragment instanceof CscFragment) {
-            return (CscFragment) fragment;
-        } else {
-            throw new IllegalStateException("current fragment: " + fragment);
-        }
     }
 
     private Fragment getCurrentFragment() {

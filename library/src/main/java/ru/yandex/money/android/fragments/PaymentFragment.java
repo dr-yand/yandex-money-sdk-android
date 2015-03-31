@@ -27,6 +27,15 @@ public abstract class PaymentFragment extends Fragment {
         });
     }
 
+    protected void repeat() {
+        startActionSafely(new Action() {
+            @Override
+            public void start(PaymentActivity activity) {
+                activity.repeat();
+            }
+        });
+    }
+
     protected void showCards() {
         startActionSafely(new Action() {
             @Override

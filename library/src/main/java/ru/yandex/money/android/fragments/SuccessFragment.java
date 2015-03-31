@@ -53,7 +53,7 @@ public class SuccessFragment extends PaymentFragment {
         assert args != null : "no arguments for SuccessFragment";
 
         Views.setText(view, R.id.ym_comment, getString(R.string.ym_success_comment,
-                args.getDouble(KEY_CONTRACT_AMOUNT)));
+                new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
         card = view.findViewById(R.id.ym_card);
         description = (TextView) view.findViewById(R.id.ym_description);
@@ -84,6 +84,9 @@ public class SuccessFragment extends PaymentFragment {
     }
 
     public void saveCard(ExternalCard moneySource) {
+        if (moneySource == null) {
+            throw new NullPointerException("moneySource is null");
+        }
         this.moneySource = moneySource;
         new DatabaseStorage(getPaymentActivity())
                 .insertMoneySource(moneySource);
@@ -96,7 +99,7 @@ public class SuccessFragment extends PaymentFragment {
         saveCard.setText(R.string.ym_success_saving_card);
         saveCard.setOnClickListener(null);
         description.setText(R.string.ym_success_saving_card_description);
-        proceed();
+        repeat();
     }
 
     private void onCardSaved() {

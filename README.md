@@ -2,20 +2,43 @@
 
 ## Overview
 
-This library provides tools for performing payments on devices running Android 4.0 (API 14) or higher.
+This library provides tools for performing payments on devices running Android 4.0 (API 14) or
+higher.
 
 Features:
 
-* default activity for payment process;
-* handling of payment process in an `IntentService`;
-* handling of application's *instance id*;
-* storing of saved cards.
+* activity for payments with bank cards
+* handling of application's *instance id*
+* storing of saved cards
 
 The library uses [Yandex.Money SDK for Java][1].
 
 ## Usage
 
-The simpliest way of using this library is to show `PaymentActivity` passing corresponding payment parameters. Payment process will be handled by the library. When done calling activity will receive `RESULT_OK` or `RESULT_CANCELED` depending on operation success.
+### Gradle Dependency (jCenter)
+
+[![Download](https://api.bintray.com/packages/yandex-money/maven/yandex-money-sdk-android/images/download.svg)]
+(https://bintray.com/yandex-money/maven/yandex-money-sdk-android/_latestVersion)
+
+To use the library in your project write this code to you build.gradle:
+
+```groovy
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+dependencies {
+    compile 'com.yandex.money.api:yandex-money-sdk-java:2.0-rc1'
+}
+```
+
+### Payments
+
+The simpliest way of using this library is to show `PaymentActivity` passing corresponding payment
+parameters. Payment process will be handled by the library. When done calling activity will receive
+`RESULT_OK` or `RESULT_CANCELED` depending on operation success.
 
 For example, if you want to pay for a phone, you can do it like this:
 
@@ -44,13 +67,12 @@ public class MyActivity extends Activity implement View.OnClickListener {
 }
 ```
 
-It is also possible to use this library partially, for example if you want your own implementation of UI elements.
-
 ## Sample Project
 
 The library contains sample project in module `sample`.
 
-To run this sample project you should enter valid `clientId` in `PayActivity`. To obtain *client id* please visit [this page][2] (also available in [Russian][3]).
+To run this sample project you should enter valid `clientId` in `PayActivity`. To obtain *client id*
+please visit [this page][2] (also available in [Russian][3]).
 
 ## Links
 

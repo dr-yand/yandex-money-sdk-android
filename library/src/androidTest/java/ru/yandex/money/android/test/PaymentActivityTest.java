@@ -107,6 +107,27 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         }.run();
     }
 
+    public void testSavedCardDeletion() {
+        new WithSavedCardTest() {
+            @Override
+            protected void execute() {
+                waitForCards();
+
+                getItemAtPosition(0)
+                        .onChildView(withId(R.id.ym_actions))
+                        .perform(click());
+
+                onView(isRoot())
+                        .perform(waitView(testProperties.getAnimationsTimeout(),
+                                withText(R.string.ym_cards_delete_card)))
+                        .perform(click());
+
+                clickOnListItem(0);
+                waitForWebView();
+            }
+        }.run();
+    }
+
     public void testSavedCardCanceledNewCard() {
         new WithSavedCardNewCardTest() {
             @Override
@@ -157,7 +178,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         solo.clickOnWebElement(id("mobile-cps_submit-button"));
 
         // waiting for success payment, may require manual user input (3D Secure for instance)
-        onView(isRoot()).perform(waitView(testProperties.getManualTimeout(), R.id.ym_success));
+        onView(isRoot()).perform(waitView(testProperties.getManualTimeout(),
+                withId(R.id.ym_success)));
 
         // checking success page and trying to save a card
         onView(withId(R.id.ym_comment))
@@ -184,7 +206,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         initSavedCardPayment();
 
         onView(isRoot())
-                .perform(waitView(testProperties.getNetworkTimeout(), R.id.ym_success));
+                .perform(waitView(testProperties.getNetworkTimeout(), withId(R.id.ym_success)));
 
         onView(withId(R.id.ym_card))
                 .check(matches(not(isDisplayed())));
@@ -207,7 +229,10 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
     private void waitForCards() {
         onView(isRoot())
-                .perform(waitView(testProperties.getNetworkTimeout(), android.R.id.list));
+                .perform(waitView(testProperties.getNetworkTimeout(), withId(android.R.id.list)));
+        onView(withId(R.id.ym_payment_sum))
+                .check(matches(withText(getString(R.string.ym_cards_payment_sum_value,
+                        localProperties.getAmount()))));
     }
 
     private void clickOnListItem(int position) {
@@ -303,8 +328,6 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
             cancel();
             waitForCards();
-            // TODO delete saved card
-
             clickOnListItem(1);
             payNewCard();
         }

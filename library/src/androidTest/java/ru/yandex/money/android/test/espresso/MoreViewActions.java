@@ -22,8 +22,8 @@ public final class MoreViewActions {
     private MoreViewActions() {
     }
 
-    public static WaitAction waitView(int seconds, int id) {
-        return new WaitView(duration(seconds), id);
+    public static WaitAction waitView(int seconds, Matcher<View> matcher) {
+        return new WaitView(duration(seconds), matcher);
     }
 
     public static WaitAction waitVisibilityChange(int seconds, int visibility) {
@@ -38,9 +38,12 @@ public final class MoreViewActions {
 
         private final Matcher<View> matcher;
 
-        public WaitView(long duration, int id) {
+        public WaitView(long duration, Matcher<View> matcher) {
             super(duration);
-            matcher = ViewMatchers.withId(id);
+            if (matcher == null) {
+                throw new NullPointerException("matcher is null");
+            }
+            this.matcher = matcher;
         }
 
         @Override

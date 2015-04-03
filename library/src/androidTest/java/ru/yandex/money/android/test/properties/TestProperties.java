@@ -17,6 +17,10 @@ public final class TestProperties extends BaseProperties {
         return parseInt("manual.timeout");
     }
 
+    public int getAnimationsTimeout() {
+        return parseInt("animations.timeout");
+    }
+
     private int parseInt(String propertyName) {
         return Integer.parseInt(get(propertyName));
     }

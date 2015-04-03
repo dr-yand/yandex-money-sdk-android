@@ -150,16 +150,20 @@ public final class PaymentActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        if (call != null) {
-            call.cancel();
-        }
         Fragment fragment = getCurrentFragment();
-        if (fragment instanceof CscFragment) {
+        super.onBackPressed();
+        cancel();
+
+        Fragment currentFragment = getCurrentFragment();
+        if (currentFragment instanceof CscFragment) {
             super.onBackPressed();
-            fragment = getCurrentFragment();
+            currentFragment = getCurrentFragment();
         }
-        if (fragment instanceof CardsFragment) {
+        if (fragment instanceof WebFragment && currentFragment instanceof CardsFragment) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .remove(currentFragment)
+                    .commit();
             reset();
         }
         applyResult();
@@ -226,13 +230,16 @@ public final class PaymentActivity extends Activity {
     }
 
     public void reset() {
+        selectedCard = null;
         process.reset();
         proceed();
     }
 
     public void cancel() {
+        selectedCard = null;
         if (call != null) {
             call.cancel();
+            call = null;
         }
     }
 

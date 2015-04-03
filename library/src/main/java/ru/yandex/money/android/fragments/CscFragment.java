@@ -31,7 +31,6 @@ public class CscFragment extends PaymentFragment {
     private TextView errorTitle;
     private TextView errorMessage;
     private EditText cscEditText;
-    private Button cancel;
     private Button pay;
 
     public static CscFragment newInstance(ExternalCard moneySource) {
@@ -70,8 +69,8 @@ public class CscFragment extends PaymentFragment {
                 getString(MoneySourceFormatter.getCscNumberType(cardType)),
                 getString(MoneySourceFormatter.getCscNumberLocation(cardType))));
 
-        cancel = (Button) view.findViewById(R.id.ym_cancel);
-        cancel.setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.ym_cancel)
+                .setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onCancelClicked();

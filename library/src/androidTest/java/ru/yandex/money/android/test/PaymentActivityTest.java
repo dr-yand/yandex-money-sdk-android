@@ -1,6 +1,7 @@
 package ru.yandex.money.android.test;
 
 import android.content.Intent;
+import android.support.test.espresso.DataInteraction;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
@@ -17,6 +18,7 @@ import ru.yandex.money.android.test.properties.TestProperties;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
@@ -39,6 +41,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
     private static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
+
+    private static final String CARD_NUMBER_ID = "cardNumber";
 
     private final LocalProperties localProperties = new LocalProperties();
     private final TestProperties testProperties = new TestProperties();
@@ -70,48 +74,69 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         }.run();
     }
 
+    public void testHome() {
+        new ClientTest() {
+            @Override
+            protected void execute() {
+                waitForFragment();
+                onView(withId(android.R.id.home))
+                        .perform(click());
+            }
+        }.run();
+    }
+
     public void testNewCard() {
-        new Test(localProperties.getClientId()) {
+        new ClientTest() {
             @Override
             protected void execute() {
                 waitForFragment();
                 // check that there was no error
                 onView(withId(R.id.ym_error_title)).check(doesNotExist());
 
-                payForCard();
+                payNewCard();
             }
         }.run();
     }
 
     public void testSavedCard() {
-        new Test(localProperties.getClientId()) {
+        new WithSavedCardTest() {
             @Override
-            protected void prepare() {
-                AppData.addSavedCard(getInstrumentation().getContext(),
-                        localProperties.getInstanceId(), localProperties.getCard());
+            protected void execute() {
+                paySavedCard();
             }
+        }.run();
+    }
 
+    public void testSavedCardCanceledNewCard() {
+        new WithSavedCardNewCardTest() {
+            @Override
+            protected void cancel() {
+                onView(withId(R.id.ym_cancel))
+                        .perform(click());
+            }
+        }.run();
+    }
+
+    public void testSavedCardCanceledBackNewCard() {
+        new WithSavedCardNewCardTest() {
+            @Override
+            protected void cancel() {
+                pressBack();
+            }
+        }.run();
+    }
+
+    public void testNewCardCanceledSavedCard() {
+        new WithSavedCardTest() {
             @Override
             protected void execute() {
                 waitForCards();
-                clickOnListItem(0);
+                clickOnListItem(1);
 
-                onView(withId(R.id.ym_csc))
-                        .perform(typeText(localProperties.getCard().csc));
-                onView(withId(R.id.ym_pay))
-                        .perform(click());
+                waitForWebView();
+                pressBack();
 
-                onView(isRoot())
-                        .perform(waitView(testProperties.getNetworkTimeout(), R.id.ym_success));
-
-                onView(withId(R.id.ym_card))
-                        .check(matches(not(isDisplayed())));
-                onView(withId(R.id.ym_description))
-                        .check(matches(not(isDisplayed())));
-                onView(withId(R.id.ym_success_marker))
-                        .check(matches(not(isDisplayed())));
-                onView(withId(R.id.ym_save_card))
-                        .check(matches(not(isDisplayed())));
+                paySavedCard();
             }
         }.run();
     }
@@ -120,19 +145,12 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         solo.waitForFragmentById(R.id.ym_container);
     }
 
-    private void payForCard() {
-        final String cardNumberId = "cardNumber";
-        // waiting for WebView to load CPS page
-        solo.waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                return !solo.getWebElements(id(cardNumberId)).isEmpty();
-            }
-        }, sleep(testProperties.getNetworkTimeout()));
+    private void payNewCard() {
+        waitForWebView();
 
         // entering card details
         LocalProperties.Card card = localProperties.getCard();
-        solo.enterTextInWebElement(id(cardNumberId), card.number);
+        solo.enterTextInWebElement(id(CARD_NUMBER_ID), card.number);
         solo.enterTextInWebElement(id("month"), card.month);
         solo.enterTextInWebElement(id("year"), card.year);
         solo.enterTextInWebElement(id("cardCvc"), card.csc);
@@ -160,15 +178,53 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
                 .check(matches(isDisplayed()));
     }
 
+    private void paySavedCard() {
+        waitForCards();
+        clickOnListItem(0);
+        initSavedCardPayment();
+
+        onView(isRoot())
+                .perform(waitView(testProperties.getNetworkTimeout(), R.id.ym_success));
+
+        onView(withId(R.id.ym_card))
+                .check(matches(not(isDisplayed())));
+        onView(withId(R.id.ym_description))
+                .check(matches(not(isDisplayed())));
+        onView(withId(R.id.ym_success_marker))
+                .check(matches(not(isDisplayed())));
+        onView(withId(R.id.ym_save_card))
+                .check(matches(not(isDisplayed())));
+    }
+
+    private void waitForWebView() {
+        solo.waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return !solo.getWebElements(id(CARD_NUMBER_ID)).isEmpty();
+            }
+        }, sleep(testProperties.getNetworkTimeout()));
+    }
+
     private void waitForCards() {
         onView(isRoot())
                 .perform(waitView(testProperties.getNetworkTimeout(), android.R.id.list));
     }
 
     private void clickOnListItem(int position) {
-        onData(anything())
+        getItemAtPosition(position)
+                .perform(click());
+    }
+
+    private DataInteraction getItemAtPosition(int position) {
+        return onData(anything())
                 .inAdapterView(withId(android.R.id.list))
-                .atPosition(position)
+                .atPosition(position);
+    }
+
+    private void initSavedCardPayment() {
+        onView(withId(R.id.ym_csc))
+                .perform(typeText(localProperties.getCard().csc));
+        onView(withId(R.id.ym_pay))
                 .perform(click());
     }
 
@@ -213,5 +269,46 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
             PhoneParams params = localProperties.getPhoneParams();
             return new PaymentArguments(clientId, params.getPatternId(), params.makeParams());
         }
+    }
+
+    private abstract class ClientTest extends Test {
+        public ClientTest() {
+            super(localProperties.getClientId());
+        }
+    }
+
+    private abstract class WithSavedCardTest extends ClientTest {
+        @Override
+        protected final void prepare() {
+            AppData.addSavedCard(getInstrumentation().getContext(), localProperties.getInstanceId(),
+                    localProperties.getCard());
+        }
+    }
+
+    private abstract class WithSavedCardNewCardTest extends WithSavedCardTest {
+        @Override
+        protected final void execute() {
+            waitForCards();
+            clickOnListItem(0);
+
+            onView(withId(R.id.ym_pay))
+                    .perform(click());
+
+            onView(withId(R.id.ym_error))
+                    .check(matches(isDisplayed()));
+            onView(withId(R.id.ym_error_title))
+                    .check(matches(withText(R.string.ym_error_oops_title)));
+            onView(withId(R.id.ym_error_message))
+                    .check(matches(withText(R.string.ym_error_csc_invalid)));
+
+            cancel();
+            waitForCards();
+            // TODO delete saved card
+
+            clickOnListItem(1);
+            payNewCard();
+        }
+
+        protected abstract void cancel();
     }
 }

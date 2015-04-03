@@ -1,6 +1,5 @@
 package ru.yandex.money.android.test;
 
-import android.content.Context;
 import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
@@ -9,14 +8,10 @@ import android.view.View;
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
 import com.yandex.money.api.methods.params.PhoneParams;
-import com.yandex.money.api.model.Card;
-import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.utils.MillisecondsIn;
 
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.PaymentArguments;
-import ru.yandex.money.android.Prefs;
-import ru.yandex.money.android.database.DatabaseStorage;
 import ru.yandex.money.android.test.properties.LocalProperties;
 import ru.yandex.money.android.test.properties.TestProperties;
 
@@ -57,7 +52,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        Cleaner.perform(getInstrumentation().getContext());
+        AppData.clean(getInstrumentation().getContext());
     }
 
     public void testInvalidId() {
@@ -92,14 +87,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         new Test(localProperties.getClientId()) {
             @Override
             protected void prepare() {
-                Context context = getInstrumentation().getContext();
-                Prefs prefs = new Prefs(context);
-                prefs.storeInstanceId(localProperties.getInstanceId());
-
-                LocalProperties.Card card = localProperties.getCard();
-                DatabaseStorage storage = new DatabaseStorage(context);
-                storage.insertMoneySource(new ExternalCard(card.number, Card.Type.parse(card.type),
-                        "payment-card", card.token));
+                AppData.addSavedCard(getInstrumentation().getContext(),
+                        localProperties.getInstanceId(), localProperties.getCard());
             }
 
             @Override

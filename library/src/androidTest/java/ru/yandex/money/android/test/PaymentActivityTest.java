@@ -18,6 +18,7 @@ import ru.yandex.money.android.test.properties.TestProperties;
 abstract class PaymentActivityTest extends ActivityInstrumentationTestCase2<PaymentActivity> {
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
+    private static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
 
     protected final LocalProperties localProperties = new LocalProperties();
     protected final TestProperties testProperties = new TestProperties();
@@ -33,6 +34,7 @@ abstract class PaymentActivityTest extends ActivityInstrumentationTestCase2<Paym
         super.setUp();
         Intent intent = new Intent();
         intent.putExtra(EXTRA_ARGUMENTS, createArguments().toBundle());
+        intent.putExtra(EXTRA_TEST_URL, localProperties.getHostUrl());
         setActivityIntent(intent);
 
         Instrumentation instrumentation = getInstrumentation();

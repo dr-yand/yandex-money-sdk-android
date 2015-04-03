@@ -13,6 +13,10 @@ public final class LocalProperties extends BaseProperties {
         super("/local.properties");
     }
 
+    public String getHostUrl() {
+        return get("host.url");
+    }
+
     public String getClientId() {
         return get("client.id");
     }

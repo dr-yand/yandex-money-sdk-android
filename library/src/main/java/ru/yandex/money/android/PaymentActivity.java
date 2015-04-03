@@ -23,6 +23,7 @@ import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
+import com.yandex.money.api.net.ApiClient;
 import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
 import com.yandex.money.api.net.OnResponseReady;
@@ -51,6 +52,7 @@ public final class PaymentActivity extends Activity {
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
+    private static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
 
     private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
     private static final String KEY_SELECTED_CARD = "selectedCard";
@@ -246,7 +248,7 @@ public final class PaymentActivity extends Activity {
 
     private boolean initPaymentProcess() {
         final String clientId = arguments.getClientId();
-        final OAuth2Session session = new OAuth2Session(new DefaultApiClient(clientId));
+        final OAuth2Session session = new OAuth2Session(createApiClient(clientId));
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override
@@ -325,6 +327,12 @@ public final class PaymentActivity extends Activity {
 
         process.setInstanceId(instanceId);
         return true;
+    }
+
+    private ApiClient createApiClient(String clientId) {
+        String testUrl = getIntent().getStringExtra(EXTRA_TEST_URL);
+        return TextUtils.isEmpty(testUrl) ? new DefaultApiClient(clientId) :
+                new TestApiClient(clientId, testUrl);
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {

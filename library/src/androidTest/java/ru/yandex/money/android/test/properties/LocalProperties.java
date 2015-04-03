@@ -22,7 +22,11 @@ public final class LocalProperties extends BaseProperties {
     }
 
     public PhoneParams getPhoneParams() {
-        return new PhoneParams(get("params.phone"), new BigDecimal(get("params.amount")));
+        return new PhoneParams(get("params.phone"), getAmount());
+    }
+
+    public BigDecimal getAmount() {
+        return new BigDecimal(get("params.amount"));
     }
 
     public static final class Card {

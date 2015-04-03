@@ -1,11 +1,11 @@
 package ru.yandex.money.android.utils;
 
-import com.yandex.money.api.net.OAuth2Session;
+import com.yandex.money.api.net.OnResponseReady;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public abstract class OnResponseReady<T> implements OAuth2Session.OnResponseReady<T> {
+public abstract class ResponseReady<T> implements OnResponseReady<T> {
 
     private final UiThreadExecutor executor = UiThreadExecutor.getInstance();
 

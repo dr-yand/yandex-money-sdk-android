@@ -1,5 +1,6 @@
 package ru.yandex.money.android.test;
 
+import android.app.Instrumentation;
 import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 
@@ -32,7 +33,10 @@ abstract class PaymentActivityTest extends ActivityInstrumentationTestCase2<Paym
         Intent intent = new Intent();
         intent.putExtra(EXTRA_ARGUMENTS, createArguments().toBundle());
         setActivityIntent(intent);
-        solo = new Solo(getInstrumentation(), getActivity());
+
+        Instrumentation instrumentation = getInstrumentation();
+        Cleaner.perform(instrumentation.getContext());
+        solo = new Solo(instrumentation, getActivity());
     }
 
     protected abstract PaymentArguments createArguments();

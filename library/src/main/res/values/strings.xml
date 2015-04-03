@@ -21,7 +21,7 @@
     <!-- Success Fragment -->
     <string name="ym_success_thank_you">Thank you!</string>
     <string name="ym_success_comment">You had been charged for %1$.2f rub.</string>
-    <string name="ym_success_save_card">Save card.</string>
+    <string name="ym_success_save_card">Save card</string>
     <string name="ym_success_save_card_description">Next time you won\'t be needed to input them again.</string>
     <string name="ym_success_saving_card">Saving card&#8230;</string>
     <string name="ym_success_saving_card_description">Please wait a moment.</string>

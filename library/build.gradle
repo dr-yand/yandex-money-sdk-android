@@ -29,7 +29,7 @@ def theVersionName() {
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.1'
+    compile 'com.yandex.money.api:yandex-money-sdk-java:3.0.2'
     compile 'com.google.code.gson:gson:2.3'
     androidTestCompile 'com.android.support.test:testing-support-lib:0.1'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.0'

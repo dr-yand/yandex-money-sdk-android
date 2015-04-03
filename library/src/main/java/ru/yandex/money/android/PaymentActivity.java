@@ -25,6 +25,7 @@ import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
 import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
+import com.yandex.money.api.net.OnResponseReady;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
 
 import java.util.List;
@@ -40,7 +41,7 @@ import ru.yandex.money.android.fragments.WebFragment;
 import ru.yandex.money.android.parcelables.ExternalCardParcelable;
 import ru.yandex.money.android.parcelables.ExternalPaymentProcessSavedStateParcelable;
 import ru.yandex.money.android.utils.Keyboards;
-import ru.yandex.money.android.utils.OnResponseReady;
+import ru.yandex.money.android.utils.ResponseReady;
 
 /**
  * @author vyasevich
@@ -64,14 +65,14 @@ public final class PaymentActivity extends Activity {
     public static void startActivityForResult(Activity activity, String clientId,
                                               P2pParams params, int requestCode) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId, P2pParams.PATTERN_ID,
+        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
                 params.makeParams()), requestCode);
     }
 
     public static void startActivityForResult(Activity activity, String clientId,
                                               PhoneParams params, int requestCode) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId, PhoneParams.PATTERN_ID,
+        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
                 params.makeParams()), requestCode);
     }
 
@@ -288,6 +289,7 @@ public final class PaymentActivity extends Activity {
         };
 
         process = new ExternalPaymentProcess(session, parameterProvider);
+        process.setCallbacks(new Callbacks());
 
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
@@ -296,7 +298,7 @@ public final class PaymentActivity extends Activity {
                 @Override
                 public Call call() throws Exception {
                     return session.enqueue(new InstanceId.Request(clientId),
-                            new OnResponseReady<InstanceId>() {
+                            new ResponseReady<InstanceId>() {
 
                         @Override
                         public void failure(Exception exception) {
@@ -322,7 +324,6 @@ public final class PaymentActivity extends Activity {
         }
 
         process.setInstanceId(instanceId);
-        process.setCallbacks(new Callbacks());
         return true;
     }
 
@@ -403,8 +404,8 @@ public final class PaymentActivity extends Activity {
 
     private final class Callbacks implements ExternalPaymentProcess.Callbacks {
 
-        private final OAuth2Session.OnResponseReady<RequestExternalPayment> requestReady =
-                new OnResponseReady<RequestExternalPayment>() {
+        private final OnResponseReady<RequestExternalPayment> requestReady =
+                new ResponseReady<RequestExternalPayment>() {
 
                     @Override
                     public void failure(Exception exception) {
@@ -418,8 +419,8 @@ public final class PaymentActivity extends Activity {
                     }
                 };
 
-        private final OAuth2Session.OnResponseReady<ProcessExternalPayment> processReady =
-                new OnResponseReady<ProcessExternalPayment>() {
+        private final OnResponseReady<ProcessExternalPayment> processReady =
+                new ResponseReady<ProcessExternalPayment>() {
 
                     @Override
                     public void failure(Exception exception) {
@@ -434,12 +435,12 @@ public final class PaymentActivity extends Activity {
                 };
 
         @Override
-        public OAuth2Session.OnResponseReady<RequestExternalPayment> getOnRequestCallback() {
+        public OnResponseReady<RequestExternalPayment> getOnRequestCallback() {
             return requestReady;
         }
 
         @Override
-        public OAuth2Session.OnResponseReady<ProcessExternalPayment> getOnProcessCallback() {
+        public OnResponseReady<ProcessExternalPayment> getOnProcessCallback() {
             return processReady;
         }
     }

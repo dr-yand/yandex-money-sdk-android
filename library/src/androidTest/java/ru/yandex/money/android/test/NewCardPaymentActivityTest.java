@@ -4,10 +4,8 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
 
 import com.robotium.solo.Condition;
-import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.utils.MillisecondsIn;
 
-import ru.yandex.money.android.PaymentArguments;
 import ru.yandex.money.android.test.properties.LocalProperties;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -27,12 +25,6 @@ import static ru.yandex.money.android.test.espresso.MoreViewActions.waitVisibili
  */
 @LargeTest
 public final class NewCardPaymentActivityTest extends PaymentActivityTest {
-
-    @Override
-    protected PaymentArguments createArguments() {
-        return new PaymentArguments(localProperties.getClientId(), PhoneParams.PATTERN_ID,
-                localProperties.getPhoneParams().makeParams());
-    }
 
     public void test() {
         final String cardNumberId = "cardNumber";

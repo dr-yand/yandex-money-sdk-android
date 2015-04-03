@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.robotium.solo.Solo;
+import com.yandex.money.api.methods.params.PhoneParams;
 
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.PaymentArguments;
@@ -39,9 +40,16 @@ abstract class PaymentActivityTest extends ActivityInstrumentationTestCase2<Paym
         solo = new Solo(instrumentation, getActivity());
     }
 
-    protected abstract PaymentArguments createArguments();
-
     protected final Solo solo() {
         return solo;
+    }
+
+    protected String getClientId() {
+        return localProperties.getClientId();
+    }
+
+    private PaymentArguments createArguments() {
+        PhoneParams params = localProperties.getPhoneParams();
+        return new PaymentArguments(getClientId(), params.getPatternId(), params.makeParams());
     }
 }

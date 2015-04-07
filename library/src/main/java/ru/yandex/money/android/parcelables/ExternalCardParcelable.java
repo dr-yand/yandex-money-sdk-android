@@ -35,7 +35,7 @@ import com.yandex.money.api.model.ExternalCard;
  */
 public final class ExternalCardParcelable implements Parcelable {
 
-    private final ExternalCard externalCard;
+    public final ExternalCard externalCard;
 
     public ExternalCardParcelable(ExternalCard externalCard) {
         if (externalCard == null) {
@@ -60,10 +60,6 @@ public final class ExternalCardParcelable implements Parcelable {
         dest.writeSerializable(externalCard.type);
         dest.writeString(externalCard.fundingSourceType);
         dest.writeString(externalCard.moneySourceToken);
-    }
-
-    public ExternalCard getExternalCard() {
-        return externalCard;
     }
 
     public static final Creator<ExternalCardParcelable> CREATOR =

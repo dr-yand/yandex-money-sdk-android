@@ -142,11 +142,11 @@ public final class PaymentActivity extends Activity {
             process.restoreSavedState(savedInstanceState
                     .<ExternalPaymentProcessSavedStateParcelable>getParcelable(
                             KEY_PROCESS_SAVED_STATE)
-                    .getSavedState());
+                    .savedState);
             if (savedInstanceState.containsKey(KEY_SELECTED_CARD)) {
                 selectedCard = savedInstanceState
                         .<ExternalCardParcelable>getParcelable(KEY_SELECTED_CARD)
-                        .getExternalCard();
+                        .externalCard;
             }
         }
     }

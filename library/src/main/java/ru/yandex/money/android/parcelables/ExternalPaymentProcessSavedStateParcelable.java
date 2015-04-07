@@ -36,7 +36,7 @@ import com.yandex.money.api.processes.ExternalPaymentProcess;
  */
 public final class ExternalPaymentProcessSavedStateParcelable implements Parcelable {
 
-    private final ExternalPaymentProcess.SavedState savedState;
+    public final ExternalPaymentProcess.SavedState savedState;
 
     public ExternalPaymentProcessSavedStateParcelable(ExternalPaymentProcess.SavedState savedState) {
         if (savedState == null) {
@@ -51,8 +51,8 @@ public final class ExternalPaymentProcessSavedStateParcelable implements Parcela
         ProcessExternalPaymentParcelable pep = parcel.readParcelable(
                 ProcessExternalPaymentParcelable.class.getClassLoader());
         savedState = new ExternalPaymentProcess.SavedState(
-                rep == null ? null : rep.getRequestExternalPayment(),
-                pep == null ? null : pep.getProcessExternalPayment(),
+                rep == null ? null : rep.rep,
+                pep == null ? null : pep.pep,
                 parcel.readInt());
     }
 
@@ -72,10 +72,6 @@ public final class ExternalPaymentProcessSavedStateParcelable implements Parcela
                 new ProcessExternalPaymentParcelable(processPayment), flags);
 
         dest.writeInt(savedState.getFlags());
-    }
-
-    public ExternalPaymentProcess.SavedState getSavedState() {
-        return savedState;
     }
 
     public static final Creator<ExternalPaymentProcessSavedStateParcelable> CREATOR =

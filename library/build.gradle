@@ -9,7 +9,7 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 22
-        versionCode 2002
+        versionCode 2003
         versionName theVersionName()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -25,7 +25,7 @@ android {
 }
 
 def theVersionName() {
-    return "2.0-rc2"
+    return "2.0-rc3"
 }
 
 dependencies {

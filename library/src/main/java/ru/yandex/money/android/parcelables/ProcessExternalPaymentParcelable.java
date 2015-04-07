@@ -40,7 +40,7 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public final class ProcessExternalPaymentParcelable implements Parcelable {
 
-    private final ProcessExternalPayment pep;
+    public final ProcessExternalPayment pep;
 
     public ProcessExternalPaymentParcelable(ProcessExternalPayment pep) {
         if (pep == null) {
@@ -86,11 +86,7 @@ public final class ProcessExternalPaymentParcelable implements Parcelable {
     private ExternalCard readMoneySource(Parcel parcel) {
         ExternalCardParcelable parcelable = parcel.readParcelable(
                 ExternalCardParcelable.class.getClassLoader());
-        return parcelable == null ? null : parcelable.getExternalCard();
-    }
-
-    public ProcessExternalPayment getProcessExternalPayment() {
-        return pep;
+        return parcelable == null ? null : parcelable.externalCard;
     }
 
     public static final Creator<ProcessExternalPaymentParcelable> CREATOR =

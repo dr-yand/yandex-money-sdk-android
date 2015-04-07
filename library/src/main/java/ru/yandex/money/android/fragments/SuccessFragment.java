@@ -147,6 +147,6 @@ public class SuccessFragment extends PaymentFragment {
 
     private ExternalCard getMoneySourceFromBundle(Bundle bundle) {
         ExternalCardParcelable parcelable = bundle.getParcelable(KEY_MONEY_SOURCE);
-        return parcelable == null ? null : parcelable.getExternalCard();
+        return parcelable == null ? null : parcelable.externalCard;
     }
 }

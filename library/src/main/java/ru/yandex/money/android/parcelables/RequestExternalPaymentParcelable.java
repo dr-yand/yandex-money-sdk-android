@@ -39,7 +39,7 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public final class RequestExternalPaymentParcelable implements Parcelable {
 
-    private final RequestExternalPayment rep;
+    public final RequestExternalPayment rep;
 
     public RequestExternalPaymentParcelable(RequestExternalPayment rep) {
         if (rep == null) {
@@ -69,10 +69,6 @@ public final class RequestExternalPaymentParcelable implements Parcelable {
         dest.writeString(rep.requestId);
         Parcelables.writeBigDecimal(dest, rep.contractAmount);
         dest.writeString(rep.title);
-    }
-
-    public RequestExternalPayment getRequestExternalPayment() {
-        return rep;
     }
 
     public static final Creator<RequestExternalPaymentParcelable> CREATOR =

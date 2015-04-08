@@ -17,5 +17,6 @@ android {
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-android:2.0-rc3'
+    // compile 'com.yandex.money.api:yandex-money-sdk-android:2.0-rc3'
+    compile project(':library')
 }

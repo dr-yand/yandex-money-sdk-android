@@ -7,7 +7,8 @@
 
         <activity android:name=".PaymentActivity"
             android:label="@string/ym_activity_label"
-            android:theme="@style/ym_theme"/>
+            android:theme="@style/ym_theme"
+            android:configChanges="orientation|screenSize"/>
 
     </application>
 

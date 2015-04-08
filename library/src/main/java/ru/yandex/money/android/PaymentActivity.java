@@ -74,9 +74,8 @@ import ru.yandex.money.android.utils.ResponseReady;
 public final class PaymentActivity extends Activity {
 
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
-
-    private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
-    private static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
+    public static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
+    public static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
 
     private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
     private static final String KEY_SELECTED_CARD = "selectedCard";
@@ -280,6 +279,7 @@ public final class PaymentActivity extends Activity {
     private boolean initPaymentProcess() {
         final String clientId = arguments.getClientId();
         final OAuth2Session session = new OAuth2Session(createApiClient(clientId));
+        session.setDebugLogging(getIntent().hasExtra(EXTRA_TEST_URL));
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override

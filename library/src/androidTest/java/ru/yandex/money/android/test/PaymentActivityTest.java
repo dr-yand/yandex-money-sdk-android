@@ -63,9 +63,6 @@ import static ru.yandex.money.android.test.espresso.MoreViewActions.waitVisibili
 @LargeTest
 public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<PaymentActivity> {
 
-    private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
-    private static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
-
     private static final String CARD_NUMBER_ID = "cardNumber";
 
     private final LocalProperties localProperties = new LocalProperties();
@@ -307,8 +304,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
         private void setUp() {
             Intent intent = new Intent();
-            intent.putExtra(EXTRA_ARGUMENTS, createArguments().toBundle());
-            intent.putExtra(EXTRA_TEST_URL, localProperties.getHostUrl());
+            intent.putExtra(PaymentActivity.EXTRA_ARGUMENTS, createArguments().toBundle());
+            intent.putExtra(PaymentActivity.EXTRA_TEST_URL, localProperties.getHostUrl());
             setActivityIntent(intent);
 
             solo = new Solo(getInstrumentation(), getActivity());

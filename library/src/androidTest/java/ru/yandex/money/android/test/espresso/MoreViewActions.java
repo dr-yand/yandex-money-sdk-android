@@ -156,7 +156,7 @@ public final class MoreViewActions {
                 if (isConditionMet(view)) {
                     return;
                 }
-                uiController.loopMainThreadForAtLeast(MillisecondsIn.SECOND);
+                uiController.loopMainThreadForAtLeast(50L);
             }
 
             throw new PerformException.Builder()

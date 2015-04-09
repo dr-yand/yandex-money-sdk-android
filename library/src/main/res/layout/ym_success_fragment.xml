@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:gravity="center">
 
         <ImageView
@@ -42,8 +41,10 @@
                 style="@style/ym_text_view.Large"
                 android:id="@+id/ym_payment_card_type"
                 android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_marginTop="@dimen/ym_screen_border_margin"
                 android:layout_marginRight="@dimen/ym_screen_border_margin"
+                android:layout_marginEnd="16dp"
                 tools:ignore="ContentDescription" />
 
             <TextView
@@ -74,6 +75,7 @@
             style="@style/ym_text_view.Small"
             android:id="@+id/ym_description"
             android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:gravity="center"
             android:text="@string/ym_success_save_card_description"/>
 

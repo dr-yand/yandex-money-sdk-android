@@ -127,6 +127,9 @@ public final class PaymentActivity extends Activity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        // we hide progress bar because on some devices we have it shown right from the start
+        hideProgressBar();
+
         arguments = new PaymentArguments(getIntent().getBundleExtra(EXTRA_ARGUMENTS));
         cards = new DatabaseStorage(this).selectMoneySources();
 

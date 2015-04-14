@@ -77,7 +77,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        AppData.clean(getInstrumentation().getContext());
+        AppData.clean(getInstrumentation().getTargetContext());
     }
 
     public void testInvalidId() {
@@ -133,16 +133,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
             @Override
             protected void execute() {
                 waitForCards();
-
-                getItemAtPosition(0)
-                        .onChildView(withId(R.id.ym_actions))
-                        .perform(click());
-
-                onView(isRoot())
-                        .perform(waitView(testProperties.getAnimationsTimeout(),
-                                withText(R.string.ym_cards_delete_card)))
-                        .perform(click());
-
+                deleteSavedCard();
                 clickOnListItem(0);
                 waitForWebView();
             }
@@ -179,6 +170,20 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
                 pressBack();
 
                 paySavedCard();
+            }
+        }.run();
+    }
+
+    public void testSavedCardDeletedNewCardCanceled() {
+        new WithSavedCardTest() {
+            @Override
+            protected void execute() {
+                waitForCards();
+                deleteSavedCard();
+                clickOnListItem(0);
+                waitForWebView();
+                pressBack();
+                waitForCards();
             }
         }.run();
     }
@@ -237,6 +242,17 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
                 .check(matches(not(isDisplayed())));
         onView(withId(R.id.ym_save_card))
                 .check(matches(not(isDisplayed())));
+    }
+
+    private void deleteSavedCard() {
+        getItemAtPosition(0)
+                .onChildView(withId(R.id.ym_actions))
+                .perform(click());
+
+        onView(isRoot())
+                .perform(waitView(testProperties.getAnimationsTimeout(),
+                        withText(R.string.ym_cards_delete_card)))
+                .perform(click());
     }
 
     private void waitForWebView() {

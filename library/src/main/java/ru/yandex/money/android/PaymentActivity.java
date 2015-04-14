@@ -85,6 +85,7 @@ public final class PaymentActivity extends Activity {
     private PaymentArguments arguments;
     private List<ExternalCard> cards;
     private ExternalCard selectedCard;
+    private boolean immediateProceed = true;
     private Call call;
 
     public static void startActivityForResult(Activity activity, String clientId,
@@ -186,6 +187,9 @@ public final class PaymentActivity extends Activity {
             currentFragment = getCurrentFragment();
         }
         if (fragment instanceof WebFragment && currentFragment instanceof CardsFragment) {
+            if (cards.size() == 0) {
+                immediateProceed = false;
+            }
             getFragmentManager()
                     .beginTransaction()
                     .remove(currentFragment)
@@ -371,7 +375,7 @@ public final class PaymentActivity extends Activity {
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {
         if (rep.status == BaseRequestPayment.Status.SUCCESS) {
-            if (cards.size() == 0) {
+            if (immediateProceed && cards.size() == 0) {
                 proceed();
             } else {
                 showCards();

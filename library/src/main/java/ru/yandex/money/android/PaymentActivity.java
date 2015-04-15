@@ -168,6 +168,7 @@ public final class PaymentActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                hideKeyboard();
                 onBackPressed();
                 return true;
             default:

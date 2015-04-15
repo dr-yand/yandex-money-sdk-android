@@ -24,6 +24,7 @@
 
 package ru.yandex.money.android.fragments;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -56,6 +57,9 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
     private static final String KEY_TITLE = "title";
     private static final String KEY_CONTRACT_AMOUNT = "contractAmount";
 
+    private int orientation;
+    private PopupMenu menu;
+
     public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
         args.putString(KEY_TITLE, title);
@@ -83,7 +87,20 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
         list.setAdapter(new CardsAdapter());
         list.setOnItemClickListener(this);
 
+        orientation = getResources()
+                .getConfiguration()
+                .orientation;
+
         return view;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (orientation != newConfig.orientation && menu != null) {
+            menu.dismiss();
+        }
+        orientation = newConfig.orientation;
     }
 
     @Override
@@ -167,7 +184,7 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
         }
 
         private void showPopup(View v, ExternalCard moneySource) {
-            PopupMenu menu = new PopupMenu(getPaymentActivity(), v);
+            menu = new PopupMenu(getPaymentActivity(), v);
             MenuInflater inflater = menu.getMenuInflater();
             inflater.inflate(R.menu.ym_card_actions, menu.getMenu());
             menu.setOnMenuItemClickListener(new MenuItemClickListener(moneySource));
@@ -192,6 +209,7 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
             public boolean onMenuItemClick(MenuItem item) {
                 if (item.getItemId() == R.id.ym_delete) {
                     deleteCard(moneySource);
+                    menu = null;
                     return true;
                 }
                 return false;

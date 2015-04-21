@@ -25,21 +25,26 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
-import com.yandex.money.api.model.Card;
-import com.yandex.money.api.model.ExternalCard;
+import com.yandex.money.api.model.MoneySource;
 
 /**
- * @author Slava Yaseich (vyasevich@yamoney.ru)
+ * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public final class ExternalCardParcelable extends CardParcelable {
+public abstract class MoneySourceParcelable implements Parcelable {
 
-    public ExternalCardParcelable(ExternalCard externalCard) {
-        super(externalCard);
+    public final MoneySource moneySource;
+
+    public MoneySourceParcelable(MoneySource moneySource) {
+        if (moneySource == null) {
+            throw new NullPointerException("moneySource is null");
+        }
+        this.moneySource = moneySource;
     }
 
-    private ExternalCardParcelable(Parcel parcel) {
-        super(parcel);
+    protected MoneySourceParcelable(Parcel parcel) {
+        moneySource = createMoneySource(parcel, parcel.readString());
     }
 
     @Override
@@ -49,27 +54,8 @@ public final class ExternalCardParcelable extends CardParcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        ExternalCard externalCard = (ExternalCard) moneySource;
-        dest.writeString(externalCard.fundingSourceType);
-        dest.writeString(externalCard.moneySourceToken);
+        dest.writeString(moneySource.id);
     }
 
-    @Override
-    protected Card createCard(Parcel parcel, String id, String panFragment, Card.Type type) {
-        return new ExternalCard(panFragment, type, parcel.readString(), parcel.readString());
-    }
-
-    public static final Creator<ExternalCardParcelable> CREATOR =
-            new Creator<ExternalCardParcelable>() {
-                @Override
-                public ExternalCardParcelable createFromParcel(Parcel source) {
-                    return new ExternalCardParcelable(source);
-                }
-
-                @Override
-                public ExternalCardParcelable[] newArray(int size) {
-                    return new ExternalCardParcelable[size];
-                }
-            };
+    protected abstract MoneySource createMoneySource(Parcel parcel, String id);
 }

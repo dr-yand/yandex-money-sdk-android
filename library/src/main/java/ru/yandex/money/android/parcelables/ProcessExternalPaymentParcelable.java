@@ -86,7 +86,7 @@ public final class ProcessExternalPaymentParcelable implements Parcelable {
     private ExternalCard readMoneySource(Parcel parcel) {
         ExternalCardParcelable parcelable = parcel.readParcelable(
                 ExternalCardParcelable.class.getClassLoader());
-        return parcelable == null ? null : parcelable.externalCard;
+        return parcelable == null ? null : (ExternalCard) parcelable.moneySource;
     }
 
     public static final Creator<ProcessExternalPaymentParcelable> CREATOR =

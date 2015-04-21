@@ -48,7 +48,7 @@ public abstract class MoneySourceParcelable implements Parcelable {
     }
 
     @Override
-    public int describeContents() {
+    public final int describeContents() {
         return 0;
     }
 

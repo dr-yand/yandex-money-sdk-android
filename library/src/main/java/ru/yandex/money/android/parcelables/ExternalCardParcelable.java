@@ -43,11 +43,6 @@ public final class ExternalCardParcelable extends CardParcelable {
     }
 
     @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         ExternalCard externalCard = (ExternalCard) moneySource;

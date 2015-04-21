@@ -25,52 +25,50 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.yandex.money.api.methods.BaseRequestPayment;
-import com.yandex.money.api.methods.RequestExternalPayment;
 import com.yandex.money.api.model.Error;
 
 import java.math.BigDecimal;
 
+import ru.yandex.money.android.utils.Parcelables;
+
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public final class RequestExternalPaymentParcelable extends BaseRequestPaymentParcelable {
+public abstract class BaseRequestPaymentParcelable implements Parcelable {
 
-    public RequestExternalPaymentParcelable(RequestExternalPayment rep) {
-        super(rep);
+    public final BaseRequestPayment baseRequestPayment;
+
+    public BaseRequestPaymentParcelable(BaseRequestPayment baseRequestPayment) {
+        if (baseRequestPayment == null) {
+            throw new NullPointerException("baseRequestPayment is null");
+        }
+        this.baseRequestPayment = baseRequestPayment;
     }
 
-    private RequestExternalPaymentParcelable(Parcel parcel) {
-        super(parcel);
+    protected BaseRequestPaymentParcelable(Parcel parcel) {
+        baseRequestPayment = createBaseRequestPayment(parcel,
+                (BaseRequestPayment.Status) parcel.readSerializable(),
+                (Error) parcel.readSerializable(), parcel.readString(),
+                Parcelables.readBigDecimal(parcel));
+    }
+
+    @Override
+    public final int describeContents() {
+        return 0;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        RequestExternalPayment rep = (RequestExternalPayment) baseRequestPayment;
-        dest.writeString(rep.title);
+        dest.writeSerializable(baseRequestPayment.status);
+        dest.writeSerializable(baseRequestPayment.error);
+        dest.writeString(baseRequestPayment.requestId);
+        Parcelables.writeBigDecimal(dest, baseRequestPayment.contractAmount);
     }
 
-    @Override
-    protected BaseRequestPayment createBaseRequestPayment(
+    protected abstract BaseRequestPayment createBaseRequestPayment(
             Parcel parcel, BaseRequestPayment.Status status, Error error, String requestId,
-            BigDecimal contractAmount) {
-
-        return new RequestExternalPayment(status, error, requestId, contractAmount,
-                parcel.readString());
-    }
-
-    public static final Creator<RequestExternalPaymentParcelable> CREATOR =
-            new Creator<RequestExternalPaymentParcelable>() {
-                @Override
-                public RequestExternalPaymentParcelable createFromParcel(Parcel source) {
-                    return new RequestExternalPaymentParcelable(source);
-                }
-
-                @Override
-                public RequestExternalPaymentParcelable[] newArray(int size) {
-                    return new RequestExternalPaymentParcelable[size];
-                }
-            };
+            BigDecimal contractAmount);
 }

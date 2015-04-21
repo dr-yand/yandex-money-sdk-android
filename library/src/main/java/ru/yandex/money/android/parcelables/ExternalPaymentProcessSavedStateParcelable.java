@@ -52,7 +52,7 @@ public final class ExternalPaymentProcessSavedStateParcelable implements Parcela
                 ProcessExternalPaymentParcelable.class.getClassLoader());
         savedState = new ExternalPaymentProcess.SavedState(
                 rep == null ? null : (RequestExternalPayment) rep.baseRequestPayment,
-                pep == null ? null : pep.pep,
+                pep == null ? null : (ProcessExternalPayment) pep.baseProcessPayment,
                 parcel.readInt());
     }
 

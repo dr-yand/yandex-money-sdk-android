@@ -25,58 +25,44 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 
+import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 
 import java.util.Map;
 
-import ru.yandex.money.android.utils.Parcelables;
-
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public final class ProcessExternalPaymentParcelable implements Parcelable {
+public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentParcelable {
 
-    public final ProcessExternalPayment pep;
-
-    public ProcessExternalPaymentParcelable(ProcessExternalPayment pep) {
-        if (pep == null) {
-            throw new NullPointerException("pep is null");
-        }
-        this.pep = pep;
+    public ProcessExternalPaymentParcelable(ProcessExternalPayment processExternalPayment) {
+        super(processExternalPayment);
     }
 
-    private ProcessExternalPaymentParcelable(Parcel parcel) {
-        ProcessExternalPayment.Status status =
-                (ProcessExternalPayment.Status) parcel.readSerializable();
-        Error error = (Error) parcel.readSerializable();
-        String acsUri = parcel.readString();
-        Map<String, String> acsParams = Parcelables.readStringMap(parcel);
-        this.pep = new ProcessExternalPayment(status, error, acsUri, acsParams,
-                readMoneySource(parcel), Parcelables.readNullableLong(parcel),
-                parcel.readString());
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+    protected ProcessExternalPaymentParcelable(Parcel parcel) {
+        super(parcel);
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(pep.status);
-        dest.writeSerializable(pep.error);
-        dest.writeString(pep.acsUri);
-        Parcelables.writeStringMap(dest, pep.acsParams);
+        super.writeToParcel(dest, flags);
         writeMoneySource(dest, flags);
-        Parcelables.writeNullableLong(dest, pep.nextRetry);
-        dest.writeString(pep.invoiceId);
+    }
+
+    @Override
+    protected BaseProcessPayment createBaseProcessPayment(
+            Parcel parcel, BaseProcessPayment.Status status, Error error, String invoiceId,
+            String acsUri, Map<String, String> acsParams, Long nextRetry) {
+
+        return new ProcessExternalPayment(status, error, invoiceId, acsUri, acsParams, nextRetry,
+                readMoneySource(parcel));
     }
 
     private void writeMoneySource(Parcel dest, int flags) {
+        ProcessExternalPayment pep = (ProcessExternalPayment) baseProcessPayment;
         ExternalCard moneySource = pep.moneySource;
         ExternalCardParcelable parcelable = moneySource == null ? null :
                 new ExternalCardParcelable(moneySource);

@@ -17,6 +17,23 @@ android {
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-android:2.0'
-    // compile project(':library')
+//    compile 'com.yandex.money.api:yandex-money-sdk-android:2.0'
+     compile project(':library')
 }
+
+def copyDemo = copySpec {
+}
+
+task copyAppSettings << {
+    if(!file("src/main/assets/app.properties").exists()) {
+        copy {
+            from("src/main/assets/")
+            rename("demo_app.properties", "app.properties")
+            include("demo_app.properties")
+            into("src/main/assets")
+        }
+    }
+}
+
+preBuild.dependsOn(copyAppSettings)
+

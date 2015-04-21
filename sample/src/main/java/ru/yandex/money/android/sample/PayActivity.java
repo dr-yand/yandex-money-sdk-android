@@ -239,7 +239,7 @@ public class PayActivity extends ListActivity {
     private Properties loadProperties() {
         InputStream is = null;
         try {
-            is = this.getAssets().open("money_app.properties");
+            is = this.getAssets().open("app.properties");
             Properties prop = new Properties();
             prop.load(is);
             return prop;

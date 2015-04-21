@@ -7,4 +7,4 @@ local.properties
 *.iml
 .idea
 
-sample/src/main/assets/money_app.properties
+sample/src/main/assets/app.properties

@@ -43,8 +43,11 @@ import android.widget.Toast;
 import com.yandex.money.api.methods.params.P2pParams;
 import com.yandex.money.api.methods.params.PhoneParams;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Properties;
 
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.sample.storage.DatabaseHelper;
@@ -55,7 +58,8 @@ import ru.yandex.money.android.utils.Views;
  */
 public class PayActivity extends ListActivity {
 
-    private static final String CLIENT_ID = "your_client_id";
+    private String client_id;
+    private String host;
 
     private static final int REQUEST_CODE = 101;
 
@@ -94,7 +98,15 @@ public class PayActivity extends ListActivity {
 
         payment = (Payment) getIntent().getSerializableExtra(EXTRA_PAYMENT);
         helper = DatabaseHelper.getInstance(this);
-
+        final Properties properties = loadProperties();
+        client_id = properties.getProperty("client_id");
+        host = properties.getProperty("host");
+        if(TextUtils.isEmpty(host)) {
+            host = "https://money.yandex.ru";
+        }
+        if (client_id == null || host == null) {
+            showPropertiesError();
+        }
         init();
     }
 
@@ -198,11 +210,11 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    PaymentActivity.startActivityForResult(this, CLIENT_ID,
+                    PaymentActivity.startActivityForResult(this, client_id, host,
                             new P2pParams(getPaymentTo(), getAmount()), REQUEST_CODE);
                     break;
                 case PHONE:
-                    PaymentActivity.startActivityForResult(this, CLIENT_ID,
+                    PaymentActivity.startActivityForResult(this, client_id, host,
                             new PhoneParams(getPaymentTo(), getAmount()), REQUEST_CODE);
                     break;
             }
@@ -222,6 +234,35 @@ public class PayActivity extends ListActivity {
     private boolean isValid() {
         return !TextUtils.isEmpty(Views.getTextSafely(paymentTo)) &&
                 !TextUtils.isEmpty(Views.getTextSafely(amount)) && getAmount().doubleValue() > 0;
+    }
+
+    private Properties loadProperties() {
+        InputStream is = null;
+        try {
+            is = this.getAssets().open("money_app.properties");
+            Properties prop = new Properties();
+            prop.load(is);
+            return prop;
+        }
+        catch (IOException e) {
+            showPropertiesError();
+            return null;
+        }
+        finally {
+            if(is != null) {
+                try {
+                    is.close();
+                }
+                catch(IOException e) {
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    private void showPropertiesError() {
+        Toast.makeText(this, R.string.activity_pay_properties_error,
+                Toast.LENGTH_SHORT).show();
     }
 
     private enum Payment {

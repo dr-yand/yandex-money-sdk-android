@@ -88,24 +88,27 @@ public final class PaymentActivity extends Activity {
     private boolean immediateProceed = true;
     private Call call;
 
-    public static void startActivityForResult(Activity activity, String clientId,
-                                              P2pParams params, int requestCode) {
+    public static void startActivityForResult(Activity activity,
+                                              String clientId,
+                                              String host,
+                                              P2pParams params,
+                                              int requestCode) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
-                params.makeParams()), requestCode);
+        startActivityForResult(activity, new PaymentArguments(clientId,
+                        params.getPatternId(), params.makeParams(), host), requestCode);
     }
 
-    public static void startActivityForResult(Activity activity, String clientId,
+    public static void startActivityForResult(Activity activity, String clientId, String host,
                                               PhoneParams params, int requestCode) {
 
         startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
-                params.makeParams()), requestCode);
+                params.makeParams(), host), requestCode);
     }
 
-    public static void startActivityForResult(Activity activity, String clientId, String patternId,
+    public static void startActivityForResult(Activity activity, String clientId, String host, String patternId,
                                               Map<String, String> params, int requestCode) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId, patternId, params),
+        startActivityForResult(activity, new PaymentArguments(clientId, patternId, params, host),
                 requestCode);
     }
 
@@ -287,7 +290,8 @@ public final class PaymentActivity extends Activity {
     private boolean initPaymentProcess() {
         final String clientId = arguments.getClientId();
         final OAuth2Session session = new OAuth2Session(createApiClient(clientId));
-        session.setDebugLogging(getIntent().hasExtra(EXTRA_TEST_URL));
+//        session.setDebugLogging(getIntent().hasExtra(EXTRA_TEST_URL));
+        session.setDebugLogging(arguments.isSandbox());
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override
@@ -369,9 +373,13 @@ public final class PaymentActivity extends Activity {
     }
 
     private ApiClient createApiClient(String clientId) {
-        String testUrl = getIntent().getStringExtra(EXTRA_TEST_URL);
-        return TextUtils.isEmpty(testUrl) ? new DefaultApiClient(clientId) :
-                new TestApiClient(clientId, testUrl);
+        if(!arguments.isSandbox()) {
+            return new DefaultApiClient(clientId);
+        }
+        else {
+            String host = arguments.getHost();
+            return new TestApiClient(clientId, host);
+        }
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {

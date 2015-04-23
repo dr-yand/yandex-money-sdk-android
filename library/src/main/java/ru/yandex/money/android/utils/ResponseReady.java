@@ -35,7 +35,7 @@ public abstract class ResponseReady<T> implements OnResponseReady<T> {
 
     @Override
     public final void onFailure(final Exception exception) {
-        executor.post(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 failure(exception);
@@ -45,7 +45,7 @@ public abstract class ResponseReady<T> implements OnResponseReady<T> {
 
     @Override
     public final void onResponse(final T response) {
-        executor.post(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 response(response);

@@ -24,8 +24,10 @@
 
 package ru.yandex.money.android.fragments;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -56,6 +58,7 @@ public class CardsFragment extends PaymentFragment {
     private int orientation;
     private PopupMenu menu;
     private DatabaseStorage databaseStorage;
+    private ViewGroup cardsView;
 
     public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
@@ -81,7 +84,7 @@ public class CardsFragment extends PaymentFragment {
                 new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
         databaseStorage = new DatabaseStorage(getPaymentActivity());
-        final ViewGroup cardsView = (ViewGroup)view.findViewById(android.R.id.list);
+        cardsView = (ViewGroup)view.findViewById(android.R.id.list);
 
         final TypedArray themeResourceResolver = getActivity()
                 .getTheme()
@@ -106,22 +109,16 @@ public class CardsFragment extends PaymentFragment {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showPopup(v, moneySource);
+                    showPopup(v, cardsView.indexOfChild(card), moneySource);
                 }
             });
 
-            final View dividerImageView = new View(view.getContext());
-
-            dividerImageView.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-            dividerImageView.setBackgroundDrawable(themeResourceResolver
-                    .getDrawable(0));
-            themeResourceResolver.recycle();
+            final View dividerImageView = createDivider(view.getContext(),
+                    themeResourceResolver.getDrawable(0));
 
             cardsView.addView(dividerImageView);
         }
+
         View cardsFooter = inflater.inflate(R.layout.ym_cards_footer, cardsView, false);
         cardsView.addView(cardsFooter);
         cardsFooter.setOnClickListener(new View.OnClickListener() {
@@ -134,40 +131,55 @@ public class CardsFragment extends PaymentFragment {
         orientation = getResources()
                 .getConfiguration()
                 .orientation;
-
+        themeResourceResolver.recycle();
         return view;
+    }
+
+    private View createDivider(Context context, Drawable divider) {
+        final View dividerImageView = new View(context);
+
+        dividerImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        dividerImageView.setBackgroundDrawable(divider);
+        return dividerImageView;
     }
 
     private List<ExternalCard> getCards() {
         return getPaymentActivity().getCards();
     }
 
-    private void showPopup(View v, ExternalCard moneySource) {
+    private void showPopup(View v, int position, ExternalCard moneySource) {
         menu = new PopupMenu(getPaymentActivity(), v);
         MenuInflater inflater = menu.getMenuInflater();
         inflater.inflate(R.menu.ym_card_actions, menu.getMenu());
-        menu.setOnMenuItemClickListener(new MenuItemClickListener(moneySource));
+        menu.setOnMenuItemClickListener(new MenuItemClickListener(moneySource,
+                position));
         menu.show();
     }
 
-    private void deleteCard(ExternalCard moneySource) {
+    private void deleteCard(ExternalCard moneySource, int position) {
         databaseStorage.deleteMoneySource(moneySource);
+        cardsView.removeViewAt(position);
         getCards().remove(moneySource);
-        //notifyDataSetChanged();
     }
 
     private class MenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
 
         private final ExternalCard moneySource;
+        private final int position;
 
-        public MenuItemClickListener(ExternalCard moneySource) {
+        public MenuItemClickListener(ExternalCard moneySource,
+                                     int position) {
             this.moneySource = moneySource;
+            this.position = position;
         }
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
             if (item.getItemId() == R.id.ym_delete) {
-                deleteCard(moneySource);
+                deleteCard(moneySource, position);
                 menu = null;
                 return true;
             }

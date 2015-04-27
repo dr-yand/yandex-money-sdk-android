@@ -24,20 +24,15 @@
 
 package ru.yandex.money.android.fragments;
 
-import android.content.DialogInterface;
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.PopupMenu;
-import android.widget.TextView;
+import android.widget.*;
 
 import com.yandex.money.api.model.ExternalCard;
 
@@ -88,6 +83,10 @@ public class CardsFragment extends PaymentFragment {
         databaseStorage = new DatabaseStorage(getPaymentActivity());
         final ViewGroup cardsView = (ViewGroup)view.findViewById(android.R.id.list);
 
+        final TypedArray themeResourceResolver = getActivity()
+                .getTheme()
+                .obtainStyledAttributes(new int[]{android.R.attr.listDivider});
+
         for(final ExternalCard moneySource : getCards()) {
             final View card = inflater.inflate(R.layout.ym_card_item, cardsView, false);
             cardsView.addView(card);
@@ -103,13 +102,25 @@ public class CardsFragment extends PaymentFragment {
             panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.get(
                     moneySource.type).cardResId, 0, 0, 0);
 
-            ImageButton button = (ImageButton) view.findViewById(R.id.ym_actions);
+            final ImageButton button = (ImageButton) view.findViewById(R.id.ym_actions);
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     showPopup(v, moneySource);
                 }
             });
+
+            final View dividerImageView = new View(view.getContext());
+
+            dividerImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    ));
+            dividerImageView.setBackgroundDrawable(themeResourceResolver
+                    .getDrawable(0));
+            themeResourceResolver.recycle();
+
+            cardsView.addView(dividerImageView);
         }
         View cardsFooter = inflater.inflate(R.layout.ym_cards_footer, cardsView, false);
         cardsView.addView(cardsFooter);

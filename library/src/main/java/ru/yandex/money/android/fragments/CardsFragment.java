@@ -24,6 +24,7 @@
 
 package ru.yandex.money.android.fragments;
 
+import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -52,13 +53,14 @@ import ru.yandex.money.android.utils.Views;
 /**
  * @author vyasevich
  */
-public class CardsFragment extends PaymentFragment implements AdapterView.OnItemClickListener {
+public class CardsFragment extends PaymentFragment {
 
     private static final String KEY_TITLE = "title";
     private static final String KEY_CONTRACT_AMOUNT = "contractAmount";
 
     private int orientation;
     private PopupMenu menu;
+    private DatabaseStorage databaseStorage;
 
     public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
@@ -83,15 +85,83 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
         Views.setText(view, R.id.ym_payment_sum, getString(R.string.ym_cards_payment_sum_value,
                 new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
-        ListView list = (ListView) view.findViewById(android.R.id.list);
-        list.setAdapter(new CardsAdapter());
-        list.setOnItemClickListener(this);
+        databaseStorage = new DatabaseStorage(getPaymentActivity());
+        final ViewGroup cardsView = (ViewGroup)view.findViewById(android.R.id.list);
+
+        for(final ExternalCard moneySource : getCards()) {
+            final View card = inflater.inflate(R.layout.ym_card_item, cardsView, false);
+            cardsView.addView(card);
+            card.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showCsc(moneySource);
+                }
+            });
+
+            final TextView panFragment = (TextView) card.findViewById(R.id.ym_pan_fragment);
+            panFragment.setText(MoneySourceFormatter.formatPanFragment(moneySource.panFragment));
+            panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.get(
+                    moneySource.type).cardResId, 0, 0, 0);
+
+            ImageButton button = (ImageButton) view.findViewById(R.id.ym_actions);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showPopup(v, moneySource);
+                }
+            });
+        }
+        View cardsFooter = inflater.inflate(R.layout.ym_cards_footer, cardsView, false);
+        cardsView.addView(cardsFooter);
+        cardsFooter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                proceed();
+            }
+        });
 
         orientation = getResources()
                 .getConfiguration()
                 .orientation;
 
         return view;
+    }
+
+    private List<ExternalCard> getCards() {
+        return getPaymentActivity().getCards();
+    }
+
+    private void showPopup(View v, ExternalCard moneySource) {
+        menu = new PopupMenu(getPaymentActivity(), v);
+        MenuInflater inflater = menu.getMenuInflater();
+        inflater.inflate(R.menu.ym_card_actions, menu.getMenu());
+        menu.setOnMenuItemClickListener(new MenuItemClickListener(moneySource));
+        menu.show();
+    }
+
+    private void deleteCard(ExternalCard moneySource) {
+        databaseStorage.deleteMoneySource(moneySource);
+        getCards().remove(moneySource);
+        //notifyDataSetChanged();
+    }
+
+    private class MenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
+
+        private final ExternalCard moneySource;
+
+        public MenuItemClickListener(ExternalCard moneySource) {
+            this.moneySource = moneySource;
+        }
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            if (item.getItemId() == R.id.ym_delete) {
+                deleteCard(moneySource);
+                menu = null;
+                return true;
+            }
+            return false;
+        }
     }
 
     @Override
@@ -101,119 +171,5 @@ public class CardsFragment extends PaymentFragment implements AdapterView.OnItem
             menu.dismiss();
         }
         orientation = newConfig.orientation;
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ExternalCard moneySource = (ExternalCard) parent.getItemAtPosition(position);
-        if (moneySource == null) {
-            proceed();
-        } else {
-            showCsc(moneySource);
-        }
-    }
-
-    private class CardsAdapter extends BaseAdapter {
-
-        private final LayoutInflater inflater;
-        private final DatabaseStorage databaseStorage;
-
-        public CardsAdapter() {
-            inflater = LayoutInflater.from(getPaymentActivity());
-            databaseStorage = new DatabaseStorage(getPaymentActivity());
-        }
-
-        @Override
-        public int getCount() {
-            return getSize() + 1;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return getCardAtPosition(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            // this is a hack to keep footer height unchanged
-            return position == getSize() ? getFooterView(parent) : getCardView(position, parent);
-        }
-
-        private View getCardView(int position, ViewGroup parent) {
-
-            View root = inflater.inflate(R.layout.ym_card_item, parent, false);
-            assert root != null : "unable to inflate layout in CardsAdapter";
-
-            final ExternalCard moneySource = getCardAtPosition(position);
-            final TextView panFragment = (TextView) root.findViewById(R.id.ym_pan_fragment);
-            panFragment.setText(MoneySourceFormatter.formatPanFragment(moneySource.panFragment));
-            panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.get(
-                    moneySource.type).cardResId, 0, 0, 0);
-
-            ImageButton button = (ImageButton) root.findViewById(R.id.ym_actions);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showPopup(v, moneySource);
-                }
-            });
-
-            return root;
-        }
-
-        private View getFooterView(ViewGroup parent) {
-            return inflater.inflate(R.layout.ym_cards_footer, parent, false);
-        }
-
-        private List<ExternalCard> getCards() {
-            return getPaymentActivity().getCards();
-        }
-
-        private int getSize() {
-            return getCards().size();
-        }
-
-        private ExternalCard getCardAtPosition(int position) {
-            List<ExternalCard> cards = getCards();
-            return position == cards.size() ? null : cards.get(position);
-        }
-
-        private void showPopup(View v, ExternalCard moneySource) {
-            menu = new PopupMenu(getPaymentActivity(), v);
-            MenuInflater inflater = menu.getMenuInflater();
-            inflater.inflate(R.menu.ym_card_actions, menu.getMenu());
-            menu.setOnMenuItemClickListener(new MenuItemClickListener(moneySource));
-            menu.show();
-        }
-
-        private void deleteCard(ExternalCard moneySource) {
-            databaseStorage.deleteMoneySource(moneySource);
-            getCards().remove(moneySource);
-            notifyDataSetChanged();
-        }
-
-        private class MenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
-
-            private final ExternalCard moneySource;
-
-            public MenuItemClickListener(ExternalCard moneySource) {
-                this.moneySource = moneySource;
-            }
-
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.ym_delete) {
-                    deleteCard(moneySource);
-                    menu = null;
-                    return true;
-                }
-                return false;
-            }
-        }
     }
 }

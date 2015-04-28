@@ -85,13 +85,13 @@ public class CardsFragment extends PaymentFragment {
                 new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
         databaseStorage = new DatabaseStorage(getPaymentActivity());
-        cardsView = (ViewGroup)view.findViewById(android.R.id.list);
+        cardsView = (ViewGroup) view.findViewById(android.R.id.list);
 
         final TypedArray themeResourceResolver = getActivity()
                 .getTheme()
                 .obtainStyledAttributes(new int[]{android.R.attr.listDivider});
 
-        for(final ExternalCard moneySource : getCards()) {
+        for (final ExternalCard moneySource : getCards()) {
             final View card = inflater.inflate(R.layout.ym_card_item, cardsView, false);
             cardsView.addView(card);
             card.setOnClickListener(new View.OnClickListener() {

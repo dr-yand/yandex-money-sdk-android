@@ -243,6 +243,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
     private void deleteSavedCard() {
         getItemAtPosition(0)
+                .onChildView(withId(R.id.ym_card_container))
                 .onChildView(withId(R.id.ym_actions))
                 .perform(click());
 
@@ -275,7 +276,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
     }
 
     private ViewGroupInteraction getItemAtPosition(int position) {
-        return onViewGroup(withId(android.R.id.list), position);
+        return onViewGroup(withId(android.R.id.list)).inPosition(position);
     }
 
     private void initSavedCardPayment() {

@@ -9,6 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/ym_card_item_height"
+        android:id="@+id/ym_card_container"
         android:orientation="horizontal"
         android:descendantFocusability="blocksDescendants"
         android:gravity="center_vertical">

@@ -44,17 +44,16 @@ public final class ViewGroupInteraction {
     private final Matcher<View> positionInViewGroupMatcher;
 
     ViewGroupInteraction(final Matcher<View> rootMatcher,
-                                final int position) {
+                         final int position) {
         final int positionWithDivider = position * 2;
         this.positionInViewGroupMatcher = new TypeSafeMatcher<View>() {
             @Override
             public boolean matchesSafely(View view) {
-                if(view.getParent() instanceof ViewGroup) {
-                    final ViewGroup parent = (ViewGroup)view.getParent();
+                if (view.getParent() instanceof ViewGroup) {
+                    final ViewGroup parent = (ViewGroup) view.getParent();
                     return rootMatcher.matches(parent)
                             && parent.indexOfChild(view) == positionWithDivider;
-                }
-                else {
+                } else {
                     return false;
                 }
             }
@@ -80,7 +79,7 @@ public final class ViewGroupInteraction {
     }
 
     public static ViewGroupInteraction onViewGroup(final Matcher<View> rootMatcher,
-                                final int position) {
+                                                   final int position) {
         return new ViewGroupInteraction(rootMatcher, position);
     }
 }

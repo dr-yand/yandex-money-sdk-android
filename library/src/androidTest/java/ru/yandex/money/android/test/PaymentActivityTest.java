@@ -276,7 +276,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
     }
 
     private ViewGroupInteraction getItemAtPosition(int position) {
-        return onViewGroup(withId(android.R.id.list)).inPosition(position);
+        return onViewGroup(withId(android.R.id.list)).atPosition(position);
     }
 
     private void initSavedCardPayment() {

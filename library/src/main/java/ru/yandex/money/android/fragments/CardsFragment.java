@@ -55,7 +55,7 @@ public class CardsFragment extends PaymentFragment {
     private int orientation;
     private PopupMenu menu;
     private DatabaseStorage databaseStorage;
-    private ViewGroup cardsView;
+    private ViewGroup bankCards;
 
     public static CardsFragment newInstance(String title, BigDecimal contractAmount) {
         Bundle args = new Bundle();
@@ -83,36 +83,36 @@ public class CardsFragment extends PaymentFragment {
                 new BigDecimal(args.getString(KEY_CONTRACT_AMOUNT))));
 
         databaseStorage = new DatabaseStorage(getPaymentActivity());
-        cardsView = (ViewGroup) view.findViewById(android.R.id.list);
+        bankCards = (ViewGroup) view.findViewById(android.R.id.list);
 
         for (int i = 0; i < getCards().size(); i++) {
-            final ExternalCard moneySource = this.getCards().get(i);
-            final View card = inflater.inflate(R.layout.ym_card_item, cardsView, false);
-            cardsView.addView(card);
+            final ExternalCard externalCard = getCards().get(i);
+            final View card = inflater.inflate(R.layout.ym_card_item, bankCards, false);
+            bankCards.addView(card);
             card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showCsc(moneySource);
+                    showCsc(externalCard);
                 }
             });
 
             final TextView panFragment = (TextView) card.findViewById(R.id.ym_pan_fragment);
-            panFragment.setText(MoneySourceFormatter.formatPanFragment(moneySource.panFragment));
+            panFragment.setText(MoneySourceFormatter.formatPanFragment(externalCard.panFragment));
             panFragment.setCompoundDrawablesWithIntrinsicBounds(CardType.get(
-                    moneySource.type).cardResId, 0, 0, 0);
+                    externalCard.type).cardResId, 0, 0, 0);
 
             final ImageButton button = (ImageButton) view.findViewById(R.id.ym_actions);
             final int iFinal = i;
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showPopup(v, iFinal, moneySource);
+                    showPopup(v, iFinal, externalCard);
                 }
             });
         }
 
-        View cardsFooter = inflater.inflate(R.layout.ym_cards_footer, cardsView, false);
-        cardsView.addView(cardsFooter);
+        View cardsFooter = inflater.inflate(R.layout.ym_cards_footer, bankCards, false);
+        bankCards.addView(cardsFooter);
         cardsFooter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -140,8 +140,17 @@ public class CardsFragment extends PaymentFragment {
 
     private void deleteCard(ExternalCard moneySource, int position) {
         databaseStorage.deleteMoneySource(moneySource);
-        cardsView.removeViewAt(position);
+        bankCards.removeViewAt(position);
         getCards().remove(moneySource);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (orientation != newConfig.orientation && menu != null) {
+            menu.dismiss();
+        }
+        orientation = newConfig.orientation;
     }
 
     private class MenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
@@ -163,14 +172,5 @@ public class CardsFragment extends PaymentFragment {
             }
             return false;
         }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (orientation != newConfig.orientation && menu != null) {
-            menu.dismiss();
-        }
-        orientation = newConfig.orientation;
     }
 }

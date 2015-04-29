@@ -37,27 +37,27 @@ import org.hamcrest.TypeSafeMatcher;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 
 /**
- * @author raymank26
+ * @author Anton Ermak (ermak@yamoney.ru)
  */
 public final class ViewGroupInteraction {
 
     private final Matcher<View> groupMatcher;
 
-
-    ViewGroupInteraction(final Matcher<View> groupMatcher) {
+    private ViewGroupInteraction(final Matcher<View> groupMatcher) {
         this.groupMatcher = groupMatcher;
     }
 
-    public ViewGroupInteraction inPosition(final int position) {
+    public static ViewGroupInteraction onViewGroup(final Matcher<View> rootMatcher) {
+        return new ViewGroupInteraction(rootMatcher);
+    }
+
+    public ViewGroupInteraction atPosition(final int position) {
         return new ViewGroupInteraction(new TypeSafeMatcher<View>() {
             @Override
             public boolean matchesSafely(View view) {
-                if(view.getParent() instanceof ViewGroup) {
+                if (view.getParent() instanceof ViewGroup) {
                     final ViewGroup parent = (ViewGroup) view.getParent();
-                    if(ViewGroupInteraction.this.groupMatcher.matches(parent) &&
-                            parent.indexOfChild(view) == position) {
-                        return true;
-                    }
+                    return groupMatcher.matches(parent) && parent.indexOfChild(view) == position;
                 }
                 return false;
             }
@@ -67,24 +67,17 @@ public final class ViewGroupInteraction {
                 description.appendText("has parent ViewGroup matching: ");
                 groupMatcher.describeTo(description);
                 description.appendText("has view at position " + position);
-
-
             }
         });
     }
 
     public ViewGroupInteraction onChildView(Matcher<View> matcher) {
-        return new ViewGroupInteraction(Matchers.allOf(withParent(this.groupMatcher),
-                matcher));
+        //noinspection unchecked
+        return new ViewGroupInteraction(Matchers.allOf(withParent(groupMatcher), matcher));
     }
 
     public ViewInteraction perform(ViewAction... actions) {
         return Espresso.onView(groupMatcher).perform(actions);
-
-    }
-
-    public static ViewGroupInteraction onViewGroup(final Matcher<View> rootMatcher) {
-        return new ViewGroupInteraction(rootMatcher);
     }
 }
 

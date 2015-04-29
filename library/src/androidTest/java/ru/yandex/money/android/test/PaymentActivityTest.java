@@ -25,22 +25,19 @@
 package ru.yandex.money.android.test;
 
 import android.content.Intent;
-import android.support.test.espresso.DataInteraction;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
-
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
 import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.utils.MillisecondsIn;
-
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.PaymentArguments;
+import ru.yandex.money.android.test.espresso.ViewGroupInteraction;
 import ru.yandex.money.android.test.properties.LocalProperties;
 import ru.yandex.money.android.test.properties.TestProperties;
 
-import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -52,10 +49,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.robotium.solo.By.id;
-import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 import static ru.yandex.money.android.test.espresso.MoreViewActions.waitView;
 import static ru.yandex.money.android.test.espresso.MoreViewActions.waitVisibilityChange;
+import static ru.yandex.money.android.test.espresso.ViewGroupInteraction.onViewGroup;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
@@ -246,6 +243,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
     private void deleteSavedCard() {
         getItemAtPosition(0)
+                .onChildView(withId(R.id.ym_card_container))
                 .onChildView(withId(R.id.ym_actions))
                 .perform(click());
 
@@ -277,10 +275,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
                 .perform(click());
     }
 
-    private DataInteraction getItemAtPosition(int position) {
-        return onData(anything())
-                .inAdapterView(withId(android.R.id.list))
-                .atPosition(position);
+    private ViewGroupInteraction getItemAtPosition(int position) {
+        return onViewGroup(withId(android.R.id.list)).atPosition(position);
     }
 
     private void initSavedCardPayment() {

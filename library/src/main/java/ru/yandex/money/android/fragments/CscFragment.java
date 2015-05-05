@@ -75,7 +75,7 @@ public class CscFragment extends PaymentFragment {
         ExternalCardParcelable externalCardParcelable = args.getParcelable(KEY_MONEY_SOURCE);
         assert externalCardParcelable != null : "provide money source for CscFragment";
 
-        moneySource = externalCardParcelable.externalCard;
+        moneySource = (ExternalCard) externalCardParcelable.moneySource;
         CardType cardType = CardType.get(moneySource.type);
 
         View view = inflater.inflate(R.layout.ym_csc_fragment, container, false);

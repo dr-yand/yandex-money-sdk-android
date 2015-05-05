@@ -26,51 +26,48 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 
-import com.yandex.money.api.methods.BaseRequestPayment;
-import com.yandex.money.api.methods.RequestExternalPayment;
-import com.yandex.money.api.model.Error;
-
-import java.math.BigDecimal;
+import com.yandex.money.api.model.Card;
+import com.yandex.money.api.model.MoneySource;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public final class RequestExternalPaymentParcelable extends BaseRequestPaymentParcelable {
+public class CardParcelable extends MoneySourceParcelable {
 
-    public RequestExternalPaymentParcelable(RequestExternalPayment rep) {
-        super(rep);
+    public CardParcelable(Card card) {
+        super(card);
     }
 
-    private RequestExternalPaymentParcelable(Parcel parcel) {
+    protected CardParcelable(Parcel parcel) {
         super(parcel);
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
-        RequestExternalPayment rep = (RequestExternalPayment) baseRequestPayment;
-        dest.writeString(rep.title);
+        Card card = (Card) moneySource;
+        dest.writeString(card.panFragment);
+        dest.writeSerializable(card.type);
     }
 
     @Override
-    protected BaseRequestPayment createBaseRequestPayment(
-            Parcel parcel, BaseRequestPayment.Status status, Error error, String requestId,
-            BigDecimal contractAmount) {
-
-        return new RequestExternalPayment(status, error, requestId, contractAmount,
-                parcel.readString());
+    protected final MoneySource createMoneySource(Parcel parcel, String id) {
+        return createCard(parcel, id, parcel.readString(), (Card.Type) parcel.readSerializable());
     }
 
-    public static final Creator<RequestExternalPaymentParcelable> CREATOR =
-            new Creator<RequestExternalPaymentParcelable>() {
-                @Override
-                public RequestExternalPaymentParcelable createFromParcel(Parcel source) {
-                    return new RequestExternalPaymentParcelable(source);
-                }
+    protected Card createCard(Parcel parcel, String id, String panFragment, Card.Type type) {
+        return new Card(id, panFragment, type);
+    }
 
-                @Override
-                public RequestExternalPaymentParcelable[] newArray(int size) {
-                    return new RequestExternalPaymentParcelable[size];
-                }
-            };
+    public static final Creator<CardParcelable> CREATOR = new Creator<CardParcelable>() {
+        @Override
+        public CardParcelable createFromParcel(Parcel source) {
+            return new CardParcelable(source);
+        }
+
+        @Override
+        public CardParcelable[] newArray(int size) {
+            return new CardParcelable[size];
+        }
+    };
 }

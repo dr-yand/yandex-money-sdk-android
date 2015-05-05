@@ -22,38 +22,40 @@
  * THE SOFTWARE.
  */
 
-package ru.yandex.money.android.utils;
+package ru.yandex.money.android.parcelables;
 
-import com.yandex.money.api.net.OnResponseReady;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.yandex.money.api.model.MoneySource;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public abstract class ResponseReady<T> implements OnResponseReady<T> {
+public abstract class MoneySourceParcelable implements Parcelable {
 
-    private final UiThreadExecutor executor = UiThreadExecutor.getInstance();
+    public final MoneySource moneySource;
 
-    @Override
-    public final void onFailure(final Exception exception) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                failure(exception);
-            }
-        });
+    public MoneySourceParcelable(MoneySource moneySource) {
+        if (moneySource == null) {
+            throw new NullPointerException("moneySource is null");
+        }
+        this.moneySource = moneySource;
+    }
+
+    protected MoneySourceParcelable(Parcel parcel) {
+        moneySource = createMoneySource(parcel, parcel.readString());
     }
 
     @Override
-    public final void onResponse(final T response) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                response(response);
-            }
-        });
+    public final int describeContents() {
+        return 0;
     }
 
-    protected abstract void failure(Exception exception);
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(moneySource.id);
+    }
 
-    protected abstract void response(T response);
+    protected abstract MoneySource createMoneySource(Parcel parcel, String id);
 }

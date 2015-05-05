@@ -25,7 +25,6 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.yandex.money.api.model.Card;
 import com.yandex.money.api.model.ExternalCard;
@@ -33,33 +32,27 @@ import com.yandex.money.api.model.ExternalCard;
 /**
  * @author Slava Yaseich (vyasevich@yamoney.ru)
  */
-public final class ExternalCardParcelable implements Parcelable {
-
-    public final ExternalCard externalCard;
+public final class ExternalCardParcelable extends CardParcelable {
 
     public ExternalCardParcelable(ExternalCard externalCard) {
-        if (externalCard == null) {
-            throw new NullPointerException("externalCard is null");
-        }
-        this.externalCard = externalCard;
+        super(externalCard);
     }
 
     private ExternalCardParcelable(Parcel parcel) {
-        externalCard = new ExternalCard(parcel.readString(), (Card.Type) parcel.readSerializable(),
-                parcel.readString(), parcel.readString());
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+        super(parcel);
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(externalCard.panFragment);
-        dest.writeSerializable(externalCard.type);
+        super.writeToParcel(dest, flags);
+        ExternalCard externalCard = (ExternalCard) moneySource;
         dest.writeString(externalCard.fundingSourceType);
         dest.writeString(externalCard.moneySourceToken);
+    }
+
+    @Override
+    protected Card createCard(Parcel parcel, String id, String panFragment, Card.Type type) {
+        return new ExternalCard(panFragment, type, parcel.readString(), parcel.readString());
     }
 
     public static final Creator<ExternalCardParcelable> CREATOR =

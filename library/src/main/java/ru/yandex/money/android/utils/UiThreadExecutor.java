@@ -26,10 +26,12 @@ package ru.yandex.money.android.utils;
 
 import android.os.Handler;
 
+import java.util.concurrent.Executor;
+
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-public class UiThreadExecutor {
+public class UiThreadExecutor implements Executor {
 
     private static UiThreadExecutor instance;
 
@@ -45,7 +47,16 @@ public class UiThreadExecutor {
         return instance;
     }
 
+    @Override
+    public void execute(Runnable command) {
+        handler.post(command);
+    }
+
+    /**
+     * @deprecated use {@link #execute(Runnable)} instead
+     */
+    @Deprecated
     public void post(Runnable runnable) {
-        handler.post(runnable);
+        execute(runnable);
     }
 }

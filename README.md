@@ -23,7 +23,7 @@ The library uses [Yandex.Money SDK for Java][1].
 To use the library in your project write this code to you build.gradle:
 
 ```groovy
-buildscript {
+allprojects {
     repositories {
         jcenter()
     }

@@ -63,7 +63,7 @@ public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentPa
 
     private void writeMoneySource(Parcel dest, int flags) {
         ProcessExternalPayment pep = (ProcessExternalPayment) baseProcessPayment;
-        ExternalCard moneySource = pep.moneySource;
+        ExternalCard moneySource = pep.externalCard;
         ExternalCardParcelable parcelable = moneySource == null ? null :
                 new ExternalCardParcelable(moneySource);
         dest.writeParcelable(parcelable, flags);

@@ -58,9 +58,6 @@ import ru.yandex.money.android.utils.Views;
  */
 public class PayActivity extends ListActivity {
 
-    private String client_id;
-    private String host;
-
     private static final int REQUEST_CODE = 101;
 
     private static final String EXTRA_PAYMENT = "ru.yandex.money.android.sample.extra.PAYMENT";
@@ -71,6 +68,9 @@ public class PayActivity extends ListActivity {
     private EditText paymentTo;
     private EditText amount;
     private TextView previous;
+
+    private String clientId;
+    private String host;
 
     public static void startP2P(Context context) {
         startActivity(context, Payment.P2P);
@@ -98,15 +98,7 @@ public class PayActivity extends ListActivity {
 
         payment = (Payment) getIntent().getSerializableExtra(EXTRA_PAYMENT);
         helper = DatabaseHelper.getInstance(this);
-        final Properties properties = loadProperties();
-        client_id = properties.getProperty("client_id");
-        host = properties.getProperty("host");
-        if(TextUtils.isEmpty(host)) {
-            host = "https://money.yandex.ru";
-        }
-        if (client_id == null || host == null) {
-            showPropertiesError();
-        }
+        setApiData();
         init();
     }
 
@@ -210,12 +202,12 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    PaymentActivity.startActivityForResult(this, client_id, host,
-                            new P2pParams(getPaymentTo(), getAmount()), REQUEST_CODE);
+                    PaymentActivity.startActivityForResult(this, new P2pParams(getPaymentTo(),
+                            getAmount()), REQUEST_CODE, clientId, host);
                     break;
                 case PHONE:
-                    PaymentActivity.startActivityForResult(this, client_id, host,
-                            new PhoneParams(getPaymentTo(), getAmount()), REQUEST_CODE);
+                    PaymentActivity.startActivityForResult(this, new PhoneParams(
+                            getPaymentTo(), getAmount()), REQUEST_CODE, clientId, host);
                     break;
             }
         } else {
@@ -236,17 +228,22 @@ public class PayActivity extends ListActivity {
                 !TextUtils.isEmpty(Views.getTextSafely(amount)) && getAmount().doubleValue() > 0;
     }
 
+    private void setApiData() {
+        Properties prop = loadProperties();
+        clientId = prop.getProperty("client_id");
+        host = prop.getProperty("host");
+    }
+
     private Properties loadProperties() {
         InputStream is = null;
         try {
-            is = this.getAssets().open("app.properties");
+            is = getAssets().open("app.properties");
             Properties prop = new Properties();
             prop.load(is);
             return prop;
         }
         catch (IOException e) {
-            showPropertiesError();
-            return null;
+            throw new IllegalStateException("no properties file found", e);
         }
         finally {
             if(is != null) {
@@ -254,15 +251,10 @@ public class PayActivity extends ListActivity {
                     is.close();
                 }
                 catch(IOException e) {
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    // does nothing
                 }
             }
         }
-    }
-
-    private void showPropertiesError() {
-        Toast.makeText(this, R.string.activity_pay_properties_error,
-                Toast.LENGTH_SHORT).show();
     }
 
     private enum Payment {

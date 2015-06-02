@@ -32,15 +32,20 @@ import com.yandex.money.api.net.HostsProvider;
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
  */
-final class TestApiClient extends DefaultApiClient {
+final class ApiClientWrapper extends DefaultApiClient {
+
+    private final static String PRODUCTION_HOST = "https://money.yandex.ru";
 
     private final HostsProvider hostsProvider;
+    private final boolean isSandbox;
 
-    TestApiClient(final String clientId, final String url) {
+    ApiClientWrapper(final String clientId, final String url) {
         super(clientId, true);
         if (TextUtils.isEmpty(url)) {
             throw new IllegalArgumentException("url is null or empty");
         }
+
+        isSandbox = !url.equals(PRODUCTION_HOST);
         hostsProvider = new HostsProvider(true) {
             @Override
             public String getMoney() {
@@ -52,5 +57,9 @@ final class TestApiClient extends DefaultApiClient {
     @Override
     public HostsProvider getHostsProvider() {
         return hostsProvider;
+    }
+
+    public boolean isSandbox() {
+        return isSandbox;
     }
 }

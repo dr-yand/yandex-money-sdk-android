@@ -14,6 +14,5 @@
     <string name="activity_pay_pay">Pay</string>
     <string name="activity_pay_toast">All fields are required.</string>
     <string name="activity_pay_previous">Previous</string>
-    <string name="activity_pay_properties_error">You should provide "money_app.properties" in assets directory</string>
 
 </resources>

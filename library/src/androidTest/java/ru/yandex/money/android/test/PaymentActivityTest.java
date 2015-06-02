@@ -28,10 +28,12 @@ import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
+
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
 import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.utils.MillisecondsIn;
+
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.PaymentArguments;
 import ru.yandex.money.android.test.espresso.ViewGroupInteraction;
@@ -317,7 +319,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         private void setUp() {
             Intent intent = new Intent();
             intent.putExtra(PaymentActivity.EXTRA_ARGUMENTS, createArguments().toBundle());
-            intent.putExtra(PaymentActivity.EXTRA_TEST_URL, localProperties.getHostUrl());
+            intent.putExtra(PaymentActivity.KEY_HOST, localProperties.getHostUrl());
+            intent.putExtra(PaymentActivity.KEY_CLIENT_ID, clientId);
             setActivityIntent(intent);
 
             solo = new Solo(getInstrumentation(), getActivity());
@@ -325,7 +328,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
         private PaymentArguments createArguments() {
             PhoneParams params = localProperties.getPhoneParams();
-            return new PaymentArguments(clientId, params.getPatternId(), params.makeParams());
+            return new PaymentArguments(params.getPatternId(), params.makeParams());
         }
     }
 

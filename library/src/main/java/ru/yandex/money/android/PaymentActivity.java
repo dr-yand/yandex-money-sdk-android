@@ -42,13 +42,10 @@ import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.methods.InstanceId;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
-import com.yandex.money.api.methods.params.P2pParams;
-import com.yandex.money.api.methods.params.PhoneParams;
+import com.yandex.money.api.methods.params.Params;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
-import com.yandex.money.api.net.ApiClient;
-import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
 import com.yandex.money.api.net.OnResponseReady;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
@@ -77,6 +74,9 @@ public final class PaymentActivity extends Activity {
     public static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
     public static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
 
+    public static final String KEY_HOST = "ru.yandex.money.android.extra.HOST";
+    public static final String KEY_CLIENT_ID = "ru.yandex.money.android.extra.CLIENT_ID";
+
     private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
     private static final String KEY_SELECTED_CARD = "selectedCard";
 
@@ -88,35 +88,29 @@ public final class PaymentActivity extends Activity {
     private boolean immediateProceed = true;
     private Call call;
 
-    public static void startActivityForResult(Activity activity,
-                                              String clientId,
-                                              String host,
-                                              P2pParams params,
-                                              int requestCode) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId,
-                        params.getPatternId(), params.makeParams(), host), requestCode);
+    public static void startActivityForResult(Activity activity, Params params, int requestCode,
+                                              String clientId, String host) {
+
+        startActivityForResult(activity, new PaymentArguments(params.getPatternId(),
+                params.makeParams()), requestCode, clientId, host);
     }
 
-    public static void startActivityForResult(Activity activity, String clientId, String host,
-                                              PhoneParams params, int requestCode) {
+    public static void startActivityForResult(Activity activity, String patternId,
+                                              Map<String, String> params, int requestCode,
+                                              String clientId, String host) {
 
-        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
-                params.makeParams(), host), requestCode);
-    }
-
-    public static void startActivityForResult(Activity activity, String clientId, String host, String patternId,
-                                              Map<String, String> params, int requestCode) {
-
-        startActivityForResult(activity, new PaymentArguments(clientId, patternId, params, host),
-                requestCode);
+        startActivityForResult(activity, new PaymentArguments(patternId, params),
+                requestCode, clientId, host);
     }
 
     private static void startActivityForResult(Activity activity, PaymentArguments arguments,
-                                               int requestCode) {
+                                               int requestCode, String clientId, String host) {
 
         Intent intent = new Intent(activity, PaymentActivity.class);
         intent.putExtra(EXTRA_ARGUMENTS, arguments.toBundle());
+        intent.putExtra(KEY_HOST, host);
+        intent.putExtra(KEY_CLIENT_ID, clientId);
         activity.startActivityForResult(intent, requestCode);
     }
 
@@ -288,10 +282,11 @@ public final class PaymentActivity extends Activity {
     }
 
     private boolean initPaymentProcess() {
-        final String clientId = arguments.getClientId();
-        final OAuth2Session session = new OAuth2Session(createApiClient(clientId));
-//        session.setDebugLogging(getIntent().hasExtra(EXTRA_TEST_URL));
-        session.setDebugLogging(arguments.isSandbox());
+        final String clientId = getIntent().getStringExtra(KEY_CLIENT_ID);
+        ApiClientWrapper apiClient = new ApiClientWrapper(clientId,
+                getIntent().getStringExtra(KEY_HOST));
+        final OAuth2Session session = new OAuth2Session(apiClient);
+        session.setDebugLogging(apiClient.isSandbox());
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override
@@ -370,16 +365,6 @@ public final class PaymentActivity extends Activity {
 
         process.setInstanceId(instanceId);
         return true;
-    }
-
-    private ApiClient createApiClient(String clientId) {
-        if(!arguments.isSandbox()) {
-            return new DefaultApiClient(clientId);
-        }
-        else {
-            String host = arguments.getHost();
-            return new TestApiClient(clientId, host);
-        }
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {

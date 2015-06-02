@@ -23,14 +23,14 @@ The library uses [Yandex.Money SDK for Java][1].
 To use the library in your project write this code to you build.gradle:
 
 ```groovy
-buildscript {
+allprojects {
     repositories {
         jcenter()
     }
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-java:2.0'
+    compile 'com.yandex.money.api:yandex-money-sdk-android:2.0.2'
 }
 ```
 

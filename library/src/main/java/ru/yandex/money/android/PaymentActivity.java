@@ -400,8 +400,8 @@ public final class PaymentActivity extends Activity {
                 Fragment fragment = getCurrentFragment();
                 if (!(fragment instanceof SuccessFragment)) {
                     showSuccess((ExternalCard) parameterProvider.getMoneySource());
-                } else if (pep.moneySource != null) {
-                    ((SuccessFragment) fragment).saveCard(pep.moneySource);
+                } else if (pep.externalCard != null) {
+                    ((SuccessFragment) fragment).saveCard(pep.externalCard);
                 }
                 break;
             case EXT_AUTH_REQUIRED:

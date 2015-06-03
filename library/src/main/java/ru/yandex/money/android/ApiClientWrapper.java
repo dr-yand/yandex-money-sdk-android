@@ -34,7 +34,7 @@ import com.yandex.money.api.net.HostsProvider;
  */
 final class ApiClientWrapper extends DefaultApiClient {
 
-    private final static String PRODUCTION_HOST = "https://money.yandex.ru";
+    public final static String PRODUCTION_HOST = "https://money.yandex.ru";
 
     private final HostsProvider hostsProvider;
     private final boolean isSandbox;

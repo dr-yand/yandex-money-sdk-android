@@ -41,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.yandex.money.api.methods.params.P2pParams;
+import com.yandex.money.api.methods.params.Params;
 import com.yandex.money.api.methods.params.PhoneParams;
 
 import java.io.IOException;
@@ -202,17 +203,23 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    PaymentActivity.startActivityForResult(this, new P2pParams(getPaymentTo(),
-                            getAmount()), REQUEST_CODE, clientId, host);
+                    startPaymentActivityForResult(new P2pParams(getPaymentTo(), getAmount()));
                     break;
                 case PHONE:
-                    PaymentActivity.startActivityForResult(this, new PhoneParams(
-                            getPaymentTo(), getAmount()), REQUEST_CODE, clientId, host);
+                    startPaymentActivityForResult(new PhoneParams(getPaymentTo(), getAmount()));
                     break;
             }
         } else {
             Toast.makeText(this, R.string.activity_pay_toast, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void startPaymentActivityForResult(Params paymentParams) {
+        Intent intent = PaymentActivity.getBuilder(this)
+                .setPaymentParams(paymentParams)
+                .setAppSettings(clientId, host)
+                .build();
+        this.startActivityForResult(intent, REQUEST_CODE);
     }
 
     private String getPaymentTo() {

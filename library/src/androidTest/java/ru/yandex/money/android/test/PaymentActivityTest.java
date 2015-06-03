@@ -317,10 +317,12 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         protected abstract void execute();
 
         private void setUp() {
-            Intent intent = new Intent();
-            intent.putExtra(PaymentActivity.EXTRA_ARGUMENTS, createArguments().toBundle());
-            intent.putExtra(PaymentActivity.KEY_HOST, localProperties.getHostUrl());
-            intent.putExtra(PaymentActivity.KEY_CLIENT_ID, clientId);
+            PaymentArguments arguments = createArguments();
+
+            Intent intent = PaymentActivity.getBuilder()
+                    .setPaymentParams(arguments.getPatternId(), arguments.getParams())
+                    .setAppSettings(clientId, localProperties.getHostUrl())
+                    .build();
             setActivityIntent(intent);
 
             solo = new Solo(getInstrumentation(), getActivity());

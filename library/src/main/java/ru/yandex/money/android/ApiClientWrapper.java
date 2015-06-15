@@ -37,7 +37,7 @@ final class ApiClientWrapper extends DefaultApiClient {
     public final static String PRODUCTION_HOST = "https://money.yandex.ru";
 
     private final HostsProvider hostsProvider;
-    private final boolean isSandbox;
+    private final boolean sandbox;
 
     ApiClientWrapper(final String clientId, final String url) {
         super(clientId, true);
@@ -45,7 +45,7 @@ final class ApiClientWrapper extends DefaultApiClient {
             throw new IllegalArgumentException("url is null or empty");
         }
 
-        isSandbox = !url.equals(PRODUCTION_HOST);
+        sandbox = !url.equals(PRODUCTION_HOST);
         hostsProvider = new HostsProvider(true) {
             @Override
             public String getMoney() {
@@ -60,6 +60,6 @@ final class ApiClientWrapper extends DefaultApiClient {
     }
 
     public boolean isSandbox() {
-        return isSandbox;
+        return sandbox;
     }
 }

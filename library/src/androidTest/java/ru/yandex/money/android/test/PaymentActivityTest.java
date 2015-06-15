@@ -319,7 +319,7 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
         private void setUp() {
             PaymentArguments arguments = createArguments();
 
-            Intent intent = PaymentActivity.getBuilder()
+            Intent intent = PaymentActivity.getBuilder(getInstrumentation().getContext())
                     .setPaymentParams(arguments.getPatternId(), arguments.getParams())
                     .setClientId(clientId)
                     .setHost(localProperties.getHostUrl())

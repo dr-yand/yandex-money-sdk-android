@@ -200,8 +200,9 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    startPaymentActivityForResult(new P2pTransferParams.Builder(
-                            getPaymentTo()).setAmount(getAmount()).build());
+                    startPaymentActivityForResult(new P2pTransferParams.Builder(getPaymentTo())
+                            .setAmount(getAmount())
+                            .build());
                     break;
                 case PHONE:
                     startPaymentActivityForResult(PhoneParams.newInstance(getPaymentTo(),
@@ -215,8 +216,11 @@ public class PayActivity extends ListActivity {
 
     private void startPaymentActivityForResult(PaymentParams paymentParams) {
         ApiData apiData = ApiData.getFromProperties(this);
-        Intent intent = PaymentActivity.getBuilder(this).setPaymentParams(paymentParams)
-                .setClientId(apiData.clientId).setHost(apiData.host).build();
+        Intent intent = PaymentActivity.getBuilder(this)
+                .setPaymentParams(paymentParams)
+                .setClientId(apiData.clientId)
+                .setHost(apiData.host)
+                .build();
         startActivityForResult(intent, REQUEST_CODE);
     }
 
@@ -238,14 +242,14 @@ public class PayActivity extends ListActivity {
         public final String clientId;
         public final String host;
 
-        public static ApiData getFromProperties(Context context) {
-            Properties prop = loadProperties(context);
-            return new ApiData(prop.getProperty("client_id"), prop.getProperty("host"));
-        }
-
         private ApiData(String clientId, String host) {
             this.clientId = clientId;
             this.host = host;
+        }
+
+        public static ApiData getFromProperties(Context context) {
+            Properties prop = loadProperties(context);
+            return new ApiData(prop.getProperty("client_id"), prop.getProperty("host"));
         }
 
         private static Properties loadProperties(Context context) {

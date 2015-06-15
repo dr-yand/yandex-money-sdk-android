@@ -55,7 +55,7 @@ public final class LocalProperties extends BaseProperties {
     }
 
     public PhoneParams getPhoneParams() {
-        return new PhoneParams(get("params.phone"), getAmount());
+        return PhoneParams.newInstance(get("params.phone"), getAmount());
     }
 
     public BigDecimal getAmount() {

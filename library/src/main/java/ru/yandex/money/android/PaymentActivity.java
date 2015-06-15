@@ -97,10 +97,6 @@ public final class PaymentActivity extends Activity {
         return new IntentBuilder(context);
     }
 
-    public static PaymentParamsBuilder getBuilder() {
-        return new IntentBuilder(null);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -269,9 +265,10 @@ public final class PaymentActivity extends Activity {
     }
 
     private boolean initPaymentProcess() {
-        final String clientId = getIntent().getStringExtra(EXTRA_CLIENT_ID);
+        final Intent intent = getIntent();
+        final String clientId = intent.getStringExtra(EXTRA_CLIENT_ID);
         ApiClientWrapper apiClient = new ApiClientWrapper(clientId,
-                getIntent().getStringExtra(EXTRA_HOST));
+                intent.getStringExtra(EXTRA_HOST));
         final OAuth2Session session = new OAuth2Session(apiClient);
         session.setDebugLogging(apiClient.isSandbox());
 
@@ -456,6 +453,9 @@ public final class PaymentActivity extends Activity {
         private String clientId;
 
         public IntentBuilder(Context context) {
+            if (context == null) {
+                throw new NullPointerException("context is null");
+            }
             this.context = context;
             this.host = ApiClientWrapper.PRODUCTION_HOST;
         }
@@ -492,7 +492,7 @@ public final class PaymentActivity extends Activity {
         }
 
         private Intent createIntent() {
-            return context == null ? new Intent() : new Intent(context, PaymentActivity.class);
+            return new Intent(context, PaymentActivity.class);
         }
     }
 

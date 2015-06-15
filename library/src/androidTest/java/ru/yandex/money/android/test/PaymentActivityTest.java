@@ -321,7 +321,8 @@ public final class PaymentActivityTest extends ActivityInstrumentationTestCase2<
 
             Intent intent = PaymentActivity.getBuilder()
                     .setPaymentParams(arguments.getPatternId(), arguments.getParams())
-                    .setAppSettings(clientId, localProperties.getHostUrl())
+                    .setClientId(clientId)
+                    .setHost(localProperties.getHostUrl())
                     .build();
             setActivityIntent(intent);
 

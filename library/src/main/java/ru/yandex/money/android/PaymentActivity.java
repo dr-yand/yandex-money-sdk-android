@@ -43,7 +43,7 @@ import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.methods.InstanceId;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
-import com.yandex.money.api.methods.params.Params;
+import com.yandex.money.api.methods.params.PaymentParams;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
@@ -430,20 +430,21 @@ public final class PaymentActivity extends Activity {
     }
 
     public interface PaymentParamsBuilder {
-        AppSettingsBuilder setPaymentParams(String patternId, Map<String, String> paymentParams);
+        AppClientIdBuilder setPaymentParams(String patternId, Map<String, String> paymentParams);
 
-        AppSettingsBuilder setPaymentParams(Params paymentParams);
+        AppClientIdBuilder setPaymentParams(PaymentParams paymentParams);
     }
 
-    public interface AppSettingsBuilder {
-        Builder setAppSettings(String clientId, String host);
+    public interface AppClientIdBuilder {
+        Builder setClientId(String clientId);
     }
 
     public interface Builder {
+        Builder setHost(String host);
         Intent build();
     }
 
-    private final static class IntentBuilder implements PaymentParamsBuilder, AppSettingsBuilder,
+    private final static class IntentBuilder implements PaymentParamsBuilder, AppClientIdBuilder,
             Builder {
 
         private final Context context;
@@ -456,24 +457,29 @@ public final class PaymentActivity extends Activity {
 
         public IntentBuilder(Context context) {
             this.context = context;
+            this.host = ApiClientWrapper.PRODUCTION_HOST;
         }
 
-        public AppSettingsBuilder setPaymentParams(String patternId,
+        public AppClientIdBuilder setPaymentParams(String patternId,
                                                    Map<String, String> paymentParams) {
             this.patternId = patternId;
             this.paymentParams = paymentParams;
             return this;
         }
 
-        public AppSettingsBuilder setPaymentParams(Params paymentParams) {
+        public AppClientIdBuilder setPaymentParams(PaymentParams paymentParams) {
             this.patternId = paymentParams.getPatternId();
             this.paymentParams = paymentParams.makeParams();
             return this;
         }
 
-        public IntentBuilder setAppSettings(String clientId, String host) {
+        public IntentBuilder setClientId(String clientId) {
             this.clientId = clientId;
-            this.host = host == null ? ApiClientWrapper.PRODUCTION_HOST : host;
+            return this;
+        }
+
+        public Builder setHost(String host) {
+            this.host = host;
             return this;
         }
 

@@ -29,7 +29,6 @@ task copyAppSettings << {
         copy {
             from("src/main/assets/")
             rename("demo_app.properties", "app.properties")
-            include("demo_app.properties")
             into("src/main/assets")
         }
     }

@@ -40,8 +40,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.yandex.money.api.methods.params.P2pParams;
-import com.yandex.money.api.methods.params.Params;
+import com.yandex.money.api.methods.params.P2pTransferParams;
+import com.yandex.money.api.methods.params.PaymentParams;
 import com.yandex.money.api.methods.params.PhoneParams;
 
 import java.io.IOException;
@@ -203,10 +203,14 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    startPaymentActivityForResult(new P2pParams(getPaymentTo(), getAmount()));
+                    final P2pTransferParams.Builder p2pBuilder = new P2pTransferParams.Builder(
+                            getPaymentTo());
+                    p2pBuilder.setAmount(getAmount());
+                    startPaymentActivityForResult(p2pBuilder.build());
                     break;
                 case PHONE:
-                    startPaymentActivityForResult(new PhoneParams(getPaymentTo(), getAmount()));
+                    startPaymentActivityForResult(PhoneParams.newInstance(getPaymentTo(),
+                            getAmount()));
                     break;
             }
         } else {
@@ -214,11 +218,9 @@ public class PayActivity extends ListActivity {
         }
     }
 
-    private void startPaymentActivityForResult(Params paymentParams) {
-        Intent intent = PaymentActivity.getBuilder(this)
-                .setPaymentParams(paymentParams)
-                .setAppSettings(clientId, host)
-                .build();
+    private void startPaymentActivityForResult(PaymentParams paymentParams) {
+        Intent intent = PaymentActivity.getBuilder(this).setPaymentParams(paymentParams)
+                .setClientId(clientId).setHost(host).build();
         this.startActivityForResult(intent, REQUEST_CODE);
     }
 

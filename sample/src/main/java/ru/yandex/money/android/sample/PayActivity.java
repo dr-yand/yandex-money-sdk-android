@@ -40,11 +40,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.yandex.money.api.methods.params.P2pParams;
+import com.yandex.money.api.methods.params.P2pTransferParams;
+import com.yandex.money.api.methods.params.PaymentParams;
 import com.yandex.money.api.methods.params.PhoneParams;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Properties;
 
 import ru.yandex.money.android.PaymentActivity;
 import ru.yandex.money.android.sample.storage.DatabaseHelper;
@@ -54,8 +58,6 @@ import ru.yandex.money.android.utils.Views;
  * @author vyasevich
  */
 public class PayActivity extends ListActivity {
-
-    private static final String CLIENT_ID = "your_client_id";
 
     private static final int REQUEST_CODE = 101;
 
@@ -198,17 +200,28 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    PaymentActivity.startActivityForResult(this, CLIENT_ID,
-                            new P2pParams(getPaymentTo(), getAmount()), REQUEST_CODE);
+                    startPaymentActivityForResult(new P2pTransferParams.Builder(getPaymentTo())
+                            .setAmount(getAmount())
+                            .build());
                     break;
                 case PHONE:
-                    PaymentActivity.startActivityForResult(this, CLIENT_ID,
-                            new PhoneParams(getPaymentTo(), getAmount()), REQUEST_CODE);
+                    startPaymentActivityForResult(PhoneParams.newInstance(getPaymentTo(),
+                            getAmount()));
                     break;
             }
         } else {
             Toast.makeText(this, R.string.activity_pay_toast, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void startPaymentActivityForResult(PaymentParams paymentParams) {
+        ApiData apiData = ApiData.getFromProperties(this);
+        Intent intent = PaymentActivity.getBuilder(this)
+                .setPaymentParams(paymentParams)
+                .setClientId(apiData.clientId)
+                .setHost(apiData.host)
+                .build();
+        startActivityForResult(intent, REQUEST_CODE);
     }
 
     private String getPaymentTo() {
@@ -222,6 +235,42 @@ public class PayActivity extends ListActivity {
     private boolean isValid() {
         return !TextUtils.isEmpty(Views.getTextSafely(paymentTo)) &&
                 !TextUtils.isEmpty(Views.getTextSafely(amount)) && getAmount().doubleValue() > 0;
+    }
+
+    private static class ApiData {
+
+        public final String clientId;
+        public final String host;
+
+        private ApiData(String clientId, String host) {
+            this.clientId = clientId;
+            this.host = host;
+        }
+
+        public static ApiData getFromProperties(Context context) {
+            Properties prop = loadProperties(context);
+            return new ApiData(prop.getProperty("client_id"), prop.getProperty("host"));
+        }
+
+        private static Properties loadProperties(Context context) {
+            InputStream is = null;
+            try {
+                is = context.getAssets().open("app.properties");
+                Properties prop = new Properties();
+                prop.load(is);
+                return prop;
+            } catch (IOException e) {
+                throw new IllegalStateException("no properties file found", e);
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        // does nothing
+                    }
+                }
+            }
+        }
     }
 
     private enum Payment {

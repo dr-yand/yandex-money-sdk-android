@@ -30,6 +30,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -42,13 +43,10 @@ import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.methods.InstanceId;
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
-import com.yandex.money.api.methods.params.P2pParams;
-import com.yandex.money.api.methods.params.PhoneParams;
+import com.yandex.money.api.methods.params.PaymentParams;
 import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
-import com.yandex.money.api.net.ApiClient;
-import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
 import com.yandex.money.api.net.OnResponseReady;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
@@ -74,8 +72,10 @@ import ru.yandex.money.android.utils.ResponseReady;
 public final class PaymentActivity extends Activity {
 
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
-    public static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
-    public static final String EXTRA_TEST_URL = "ru.yandex.money.android.extra.TEST_URL";
+
+    private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
+    private static final String EXTRA_HOST = "ru.yandex.money.android.extra.HOST";
+    private static final String EXTRA_CLIENT_ID = "ru.yandex.money.android.extra.CLIENT_ID";
 
     private static final String KEY_PROCESS_SAVED_STATE = "processSavedState";
     private static final String KEY_SELECTED_CARD = "selectedCard";
@@ -88,33 +88,13 @@ public final class PaymentActivity extends Activity {
     private boolean immediateProceed = true;
     private Call call;
 
-    public static void startActivityForResult(Activity activity, String clientId,
-                                              P2pParams params, int requestCode) {
-
-        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
-                params.makeParams()), requestCode);
-    }
-
-    public static void startActivityForResult(Activity activity, String clientId,
-                                              PhoneParams params, int requestCode) {
-
-        startActivityForResult(activity, new PaymentArguments(clientId, params.getPatternId(),
-                params.makeParams()), requestCode);
-    }
-
-    public static void startActivityForResult(Activity activity, String clientId, String patternId,
-                                              Map<String, String> params, int requestCode) {
-
-        startActivityForResult(activity, new PaymentArguments(clientId, patternId, params),
-                requestCode);
-    }
-
-    private static void startActivityForResult(Activity activity, PaymentArguments arguments,
-                                               int requestCode) {
-
-        Intent intent = new Intent(activity, PaymentActivity.class);
-        intent.putExtra(EXTRA_ARGUMENTS, arguments.toBundle());
-        activity.startActivityForResult(intent, requestCode);
+    /**
+     * Returns intent builder used for launch this activity
+     *
+     * @param context application context or {@code null}
+     */
+    public static PaymentParamsBuilder getBuilder(Context context) {
+        return new IntentBuilder(context);
     }
 
     @Override
@@ -285,9 +265,12 @@ public final class PaymentActivity extends Activity {
     }
 
     private boolean initPaymentProcess() {
-        final String clientId = arguments.getClientId();
-        final OAuth2Session session = new OAuth2Session(createApiClient(clientId));
-        session.setDebugLogging(getIntent().hasExtra(EXTRA_TEST_URL));
+        final Intent intent = getIntent();
+        final String clientId = intent.getStringExtra(EXTRA_CLIENT_ID);
+        ApiClientWrapper apiClient = new ApiClientWrapper(clientId,
+                intent.getStringExtra(EXTRA_HOST));
+        final OAuth2Session session = new OAuth2Session(apiClient);
+        session.setDebugLogging(apiClient.isSandbox());
 
         parameterProvider = new ExternalPaymentProcess.ParameterProvider() {
             @Override
@@ -341,24 +324,24 @@ public final class PaymentActivity extends Activity {
                     return session.enqueue(new InstanceId.Request(clientId),
                             new ResponseReady<InstanceId>() {
 
-                        @Override
-                        public void failure(Exception exception) {
-                            exception.printStackTrace();
-                            onOperationFailed();
-                        }
+                                @Override
+                                public void failure(Exception exception) {
+                                    exception.printStackTrace();
+                                    onOperationFailed();
+                                }
 
-                        @Override
-                        public void response(InstanceId response) {
-                            if (response.isSuccess()) {
-                                prefs.storeInstanceId(response.instanceId);
-                                process.setInstanceId(response.instanceId);
-                                proceed();
-                            } else {
-                                showError(response.error, response.status.code);
-                            }
-                            hideProgressBar();
-                        }
-                    });
+                                @Override
+                                public void response(InstanceId response) {
+                                    if (response.isSuccess()) {
+                                        prefs.storeInstanceId(response.instanceId);
+                                        process.setInstanceId(response.instanceId);
+                                        proceed();
+                                    } else {
+                                        showError(response.error, response.status.code);
+                                    }
+                                    hideProgressBar();
+                                }
+                            });
                 }
             });
             return false;
@@ -366,12 +349,6 @@ public final class PaymentActivity extends Activity {
 
         process.setInstanceId(instanceId);
         return true;
-    }
-
-    private ApiClient createApiClient(String clientId) {
-        String testUrl = getIntent().getStringExtra(EXTRA_TEST_URL);
-        return TextUtils.isEmpty(testUrl) ? new DefaultApiClient(clientId) :
-                new TestApiClient(clientId, testUrl);
     }
 
     private void onExternalPaymentReceived(RequestExternalPayment rep) {
@@ -446,6 +423,76 @@ public final class PaymentActivity extends Activity {
             setResult(RESULT_OK, intent);
         } else {
             setResult(RESULT_CANCELED);
+        }
+    }
+
+    public interface PaymentParamsBuilder {
+        AppClientIdBuilder setPaymentParams(String patternId, Map<String, String> paymentParams);
+
+        AppClientIdBuilder setPaymentParams(PaymentParams paymentParams);
+    }
+
+    public interface AppClientIdBuilder {
+        Builder setClientId(String clientId);
+    }
+
+    public interface Builder {
+        Builder setHost(String host);
+        Intent build();
+    }
+
+    private final static class IntentBuilder implements PaymentParamsBuilder, AppClientIdBuilder,
+            Builder {
+
+        private final Context context;
+
+        private String patternId;
+        private Map<String, String> paymentParams;
+
+        private String host;
+        private String clientId;
+
+        public IntentBuilder(Context context) {
+            if (context == null) {
+                throw new NullPointerException("context is null");
+            }
+            this.context = context;
+            this.host = ApiClientWrapper.PRODUCTION_HOST;
+        }
+
+        public AppClientIdBuilder setPaymentParams(String patternId,
+                                                   Map<String, String> paymentParams) {
+            this.patternId = patternId;
+            this.paymentParams = paymentParams;
+            return this;
+        }
+
+        public AppClientIdBuilder setPaymentParams(PaymentParams paymentParams) {
+            this.patternId = paymentParams.getPatternId();
+            this.paymentParams = paymentParams.makeParams();
+            return this;
+        }
+
+        public IntentBuilder setClientId(String clientId) {
+            this.clientId = clientId;
+            return this;
+        }
+
+        public Builder setHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Intent build() {
+            return createIntent()
+                    .putExtra(EXTRA_ARGUMENTS, new PaymentArguments(patternId, paymentParams).
+                            toBundle())
+                    .putExtra(EXTRA_HOST, host)
+                    .putExtra(EXTRA_CLIENT_ID, clientId);
+        }
+
+        private Intent createIntent() {
+            return new Intent(context, PaymentActivity.class);
         }
     }
 

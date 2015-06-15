@@ -221,7 +221,7 @@ public class PayActivity extends ListActivity {
     private void startPaymentActivityForResult(PaymentParams paymentParams) {
         Intent intent = PaymentActivity.getBuilder(this).setPaymentParams(paymentParams)
                 .setClientId(clientId).setHost(host).build();
-        this.startActivityForResult(intent, REQUEST_CODE);
+        startActivityForResult(intent, REQUEST_CODE);
     }
 
     private String getPaymentTo() {

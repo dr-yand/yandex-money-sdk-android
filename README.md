@@ -78,9 +78,9 @@ used.
 
 The library contains sample project in module `sample`.
 
-It's self-contained using the demo environment(see
-`src/main/assets/demo_app.properties`). Feel free to create you own `app.properties` in the same folder
-with appropriate production settings.
+It's self-contained and uses a demo environment configuration(see
+`src/main/assets/demo_app.properties`). Feel free to create you own `app.properties` in the same
+folder with appropriate production settings.
 
 To obtain *client id* please visit [this page][2] (also available in [Russian][3]).
 

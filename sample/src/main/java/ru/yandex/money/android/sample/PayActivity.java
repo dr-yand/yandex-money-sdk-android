@@ -70,9 +70,6 @@ public class PayActivity extends ListActivity {
     private EditText amount;
     private TextView previous;
 
-    private String clientId;
-    private String host;
-
     public static void startP2P(Context context) {
         startActivity(context, Payment.P2P);
     }
@@ -99,7 +96,7 @@ public class PayActivity extends ListActivity {
 
         payment = (Payment) getIntent().getSerializableExtra(EXTRA_PAYMENT);
         helper = DatabaseHelper.getInstance(this);
-        setApiData();
+
         init();
     }
 
@@ -203,10 +200,8 @@ public class PayActivity extends ListActivity {
         if (isValid()) {
             switch (payment) {
                 case P2P:
-                    final P2pTransferParams.Builder p2pBuilder = new P2pTransferParams.Builder(
-                            getPaymentTo());
-                    p2pBuilder.setAmount(getAmount());
-                    startPaymentActivityForResult(p2pBuilder.build());
+                    startPaymentActivityForResult(new P2pTransferParams.Builder(
+                            getPaymentTo()).setAmount(getAmount()).build());
                     break;
                 case PHONE:
                     startPaymentActivityForResult(PhoneParams.newInstance(getPaymentTo(),
@@ -219,8 +214,9 @@ public class PayActivity extends ListActivity {
     }
 
     private void startPaymentActivityForResult(PaymentParams paymentParams) {
+        ApiData apiData = ApiData.getFromProperties(this);
         Intent intent = PaymentActivity.getBuilder(this).setPaymentParams(paymentParams)
-                .setClientId(clientId).setHost(host).build();
+                .setClientId(apiData.clientId).setHost(apiData.host).build();
         startActivityForResult(intent, REQUEST_CODE);
     }
 
@@ -237,30 +233,37 @@ public class PayActivity extends ListActivity {
                 !TextUtils.isEmpty(Views.getTextSafely(amount)) && getAmount().doubleValue() > 0;
     }
 
-    private void setApiData() {
-        Properties prop = loadProperties();
-        clientId = prop.getProperty("client_id");
-        host = prop.getProperty("host");
-    }
+    private static class ApiData {
 
-    private Properties loadProperties() {
-        InputStream is = null;
-        try {
-            is = getAssets().open("app.properties");
-            Properties prop = new Properties();
-            prop.load(is);
-            return prop;
+        public final String clientId;
+        public final String host;
+
+        public static ApiData getFromProperties(Context context) {
+            Properties prop = loadProperties(context);
+            return new ApiData(prop.getProperty("client_id"), prop.getProperty("host"));
         }
-        catch (IOException e) {
-            throw new IllegalStateException("no properties file found", e);
+
+        private ApiData(String clientId, String host) {
+            this.clientId = clientId;
+            this.host = host;
         }
-        finally {
-            if(is != null) {
-                try {
-                    is.close();
-                }
-                catch(IOException e) {
-                    // does nothing
+
+        private static Properties loadProperties(Context context) {
+            InputStream is = null;
+            try {
+                is = context.getAssets().open("app.properties");
+                Properties prop = new Properties();
+                prop.load(is);
+                return prop;
+            } catch (IOException e) {
+                throw new IllegalStateException("no properties file found", e);
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        // does nothing
+                    }
                 }
             }
         }

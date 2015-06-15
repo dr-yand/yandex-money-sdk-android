@@ -21,9 +21,6 @@ dependencies {
     compile project(':library')
 }
 
-def copyDemo = copySpec {
-}
-
 task copyAppSettings << {
     if(!file("src/main/assets/app.properties").exists()) {
         copy {
@@ -35,4 +32,3 @@ task copyAppSettings << {
 }
 
 preBuild.dependsOn(copyAppSettings)
-

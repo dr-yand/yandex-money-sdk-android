@@ -25,11 +25,11 @@ android {
 }
 
 def theVersionName() {
-    return "3.0.0-alpha-1"
+    return "3.0.0-alpha-2"
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-java:4.0.0-alpha-2'
+    compile 'com.yandex.money.api:yandex-money-sdk-java:4.0.0-alpha-3'
     androidTestCompile 'com.android.support.test:testing-support-lib:0.1'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.0'
     androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.3.1'

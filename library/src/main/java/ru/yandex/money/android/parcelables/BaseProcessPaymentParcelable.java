@@ -52,7 +52,7 @@ public abstract class BaseProcessPaymentParcelable implements Parcelable {
         baseProcessPayment = createBaseProcessPayment(parcel,
                 (BaseProcessPayment.Status) parcel.readSerializable(),
                 (Error) parcel.readSerializable(), parcel.readString(), parcel.readString(),
-                Parcelables.readStringMap(parcel), parcel.readLong());
+                Parcelables.readStringMap(parcel), Parcelables.readNullableLong(parcel));
     }
 
     @Override

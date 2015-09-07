@@ -158,9 +158,11 @@ public final class PaymentActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        cancel();
+        applyResult();
+
         Fragment fragment = getCurrentFragment();
         super.onBackPressed();
-        cancel();
 
         Fragment currentFragment = getCurrentFragment();
         if (currentFragment instanceof CscFragment) {
@@ -177,7 +179,6 @@ public final class PaymentActivity extends Activity {
                     .commit();
             reset();
         }
-        applyResult();
     }
 
     public List<ExternalCard> getCards() {

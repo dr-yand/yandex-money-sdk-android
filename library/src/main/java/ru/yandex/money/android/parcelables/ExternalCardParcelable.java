@@ -26,7 +26,6 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 
-import com.yandex.money.api.model.Card;
 import com.yandex.money.api.model.ExternalCard;
 
 /**
@@ -39,20 +38,17 @@ public final class ExternalCardParcelable extends CardParcelable {
     }
 
     private ExternalCardParcelable(Parcel parcel) {
-        super(parcel);
+        super(parcel, new ExternalCard.Builder()
+                .setFundingSourceType(parcel.readString())
+                .setMoneySourceToken(parcel.readString()));
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
         ExternalCard externalCard = (ExternalCard) moneySource;
         dest.writeString(externalCard.fundingSourceType);
         dest.writeString(externalCard.moneySourceToken);
-    }
-
-    @Override
-    protected Card createCard(Parcel parcel, String id, String panFragment, Card.Type type) {
-        return new ExternalCard(panFragment, type, parcel.readString(), parcel.readString());
+        super.writeToParcel(dest, flags);
     }
 
     public static final Creator<ExternalCardParcelable> CREATOR =

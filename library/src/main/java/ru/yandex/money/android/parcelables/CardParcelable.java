@@ -27,7 +27,6 @@ package ru.yandex.money.android.parcelables;
 import android.os.Parcel;
 
 import com.yandex.money.api.model.Card;
-import com.yandex.money.api.model.MoneySource;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
@@ -38,25 +37,21 @@ public class CardParcelable extends MoneySourceParcelable {
         super(card);
     }
 
-    protected CardParcelable(Parcel parcel) {
-        super(parcel);
+    protected CardParcelable(Parcel parcel, Card.Builder builder) {
+        super(parcel, builder.setPanFragment(parcel.readString())
+                .setType((Card.Type) parcel.readSerializable()));
+    }
+
+    private CardParcelable(Parcel parcel) {
+        this(parcel, new Card.Builder());
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
         Card card = (Card) moneySource;
         dest.writeString(card.panFragment);
         dest.writeSerializable(card.type);
-    }
-
-    @Override
-    protected final MoneySource createMoneySource(Parcel parcel, String id) {
-        return createCard(parcel, id, parcel.readString(), (Card.Type) parcel.readSerializable());
-    }
-
-    protected Card createCard(Parcel parcel, String id, String panFragment, Card.Type type) {
-        return new Card(id, panFragment, type);
+        super.writeToParcel(dest, flags);
     }
 
     public static final Creator<CardParcelable> CREATOR = new Creator<CardParcelable>() {

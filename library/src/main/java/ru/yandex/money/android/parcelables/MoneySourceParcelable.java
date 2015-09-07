@@ -43,8 +43,8 @@ public abstract class MoneySourceParcelable implements Parcelable {
         this.moneySource = moneySource;
     }
 
-    protected MoneySourceParcelable(Parcel parcel) {
-        moneySource = createMoneySource(parcel, parcel.readString());
+    protected MoneySourceParcelable(Parcel parcel, MoneySource.Builder builder) {
+        moneySource = builder.setId(parcel.readString()).create();
     }
 
     @Override
@@ -56,6 +56,4 @@ public abstract class MoneySourceParcelable implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(moneySource.id);
     }
-
-    protected abstract MoneySource createMoneySource(Parcel parcel, String id);
 }

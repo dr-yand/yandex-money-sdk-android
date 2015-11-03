@@ -26,12 +26,8 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 
-import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.methods.ProcessExternalPayment;
-import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
-
-import java.util.Map;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
@@ -43,22 +39,14 @@ public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentPa
     }
 
     protected ProcessExternalPaymentParcelable(Parcel parcel) {
-        super(parcel);
+        super(parcel, new ProcessExternalPayment.Builder()
+                .setExternalCard(readMoneySource(parcel)));
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         writeMoneySource(dest, flags);
-    }
-
-    @Override
-    protected BaseProcessPayment createBaseProcessPayment(
-            Parcel parcel, BaseProcessPayment.Status status, Error error, String invoiceId,
-            String acsUri, Map<String, String> acsParams, Long nextRetry) {
-
-        return new ProcessExternalPayment(status, error, invoiceId, acsUri, acsParams, nextRetry,
-                readMoneySource(parcel));
     }
 
     private void writeMoneySource(Parcel dest, int flags) {
@@ -69,7 +57,7 @@ public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentPa
         dest.writeParcelable(parcelable, flags);
     }
 
-    private ExternalCard readMoneySource(Parcel parcel) {
+    private static ExternalCard readMoneySource(Parcel parcel) {
         ExternalCardParcelable parcelable = parcel.readParcelable(
                 ExternalCardParcelable.class.getClassLoader());
         return parcelable == null ? null : (ExternalCard) parcelable.moneySource;

@@ -60,10 +60,12 @@ public class DatabaseStorage {
 
         List<ExternalCard> moneySources = new ArrayList<ExternalCard>();
         while (cursor.moveToNext()) {
-            moneySources.add(new ExternalCard(cursor.getString(panFragmentIndex),
-                    Card.Type.parse(cursor.getString(typeIndex)),
-                    cursor.getString(fundingSourceTypeIndex),
-                    cursor.getString(tokenIndex)));
+            moneySources.add((ExternalCard) new ExternalCard.Builder()
+                    .setFundingSourceType(cursor.getString(fundingSourceTypeIndex))
+                    .setMoneySourceToken(cursor.getString(tokenIndex))
+                    .setPanFragment(cursor.getString(panFragmentIndex))
+                    .setType(Card.Type.parse(cursor.getString(typeIndex)))
+                    .create());
         }
 
         cursor.close();

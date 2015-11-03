@@ -30,8 +30,6 @@ import android.os.Parcelable;
 import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.model.Error;
 
-import java.util.Map;
-
 import ru.yandex.money.android.utils.Parcelables;
 
 /**
@@ -48,11 +46,15 @@ public abstract class BaseProcessPaymentParcelable implements Parcelable {
         this.baseProcessPayment = baseProcessPayment;
     }
 
-    protected BaseProcessPaymentParcelable(Parcel parcel) {
-        baseProcessPayment = createBaseProcessPayment(parcel,
-                (BaseProcessPayment.Status) parcel.readSerializable(),
-                (Error) parcel.readSerializable(), parcel.readString(), parcel.readString(),
-                Parcelables.readStringMap(parcel), Parcelables.readNullableLong(parcel));
+    protected BaseProcessPaymentParcelable(Parcel parcel, BaseProcessPayment.Builder builder) {
+        baseProcessPayment = builder
+                .setStatus((BaseProcessPayment.Status) parcel.readSerializable())
+                .setError((Error) parcel.readSerializable())
+                .setInvoiceId(parcel.readString())
+                .setAcsUri(parcel.readString())
+                .setAcsParams(Parcelables.readStringMap(parcel))
+                .setNextRetry(parcel.readLong())
+                .create();
     }
 
     @Override
@@ -67,10 +69,6 @@ public abstract class BaseProcessPaymentParcelable implements Parcelable {
         dest.writeString(baseProcessPayment.invoiceId);
         dest.writeString(baseProcessPayment.acsUri);
         Parcelables.writeStringMap(dest, baseProcessPayment.acsParams);
-        Parcelables.writeNullableLong(dest, baseProcessPayment.nextRetry);
+        dest.writeLong(baseProcessPayment.nextRetry);
     }
-
-    protected abstract BaseProcessPayment createBaseProcessPayment(
-            Parcel parcel, BaseProcessPayment.Status status, Error error, String invoiceId,
-            String acsUri, Map<String, String> acsParams, Long nextRetry);
 }

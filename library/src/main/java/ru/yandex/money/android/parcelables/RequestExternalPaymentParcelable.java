@@ -26,11 +26,7 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 
-import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
-import com.yandex.money.api.model.Error;
-
-import java.math.BigDecimal;
 
 /**
  * @author Slava Yasevich (vyasevich@yamoney.ru)
@@ -42,23 +38,15 @@ public final class RequestExternalPaymentParcelable extends BaseRequestPaymentPa
     }
 
     private RequestExternalPaymentParcelable(Parcel parcel) {
-        super(parcel);
+        super(parcel, new RequestExternalPayment.Builder()
+                .setTitle(parcel.readString()));
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
         RequestExternalPayment rep = (RequestExternalPayment) baseRequestPayment;
         dest.writeString(rep.title);
-    }
-
-    @Override
-    protected BaseRequestPayment createBaseRequestPayment(
-            Parcel parcel, BaseRequestPayment.Status status, Error error, String requestId,
-            BigDecimal contractAmount) {
-
-        return new RequestExternalPayment(status, error, requestId, contractAmount,
-                parcel.readString());
+        super.writeToParcel(dest, flags);
     }
 
     public static final Creator<RequestExternalPaymentParcelable> CREATOR =

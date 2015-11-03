@@ -30,8 +30,6 @@ import android.os.Parcelable;
 import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.model.Error;
 
-import java.math.BigDecimal;
-
 import ru.yandex.money.android.utils.Parcelables;
 
 /**
@@ -48,11 +46,13 @@ public abstract class BaseRequestPaymentParcelable implements Parcelable {
         this.baseRequestPayment = baseRequestPayment;
     }
 
-    protected BaseRequestPaymentParcelable(Parcel parcel) {
-        baseRequestPayment = createBaseRequestPayment(parcel,
-                (BaseRequestPayment.Status) parcel.readSerializable(),
-                (Error) parcel.readSerializable(), parcel.readString(),
-                Parcelables.readBigDecimal(parcel));
+    protected BaseRequestPaymentParcelable(Parcel parcel, BaseRequestPayment.Builder builder) {
+        baseRequestPayment = builder
+                .setStatus((BaseRequestPayment.Status) parcel.readSerializable())
+                .setError((Error) parcel.readSerializable())
+                .setRequestId(parcel.readString())
+                .setContractAmount(Parcelables.readBigDecimal(parcel))
+                .create();
     }
 
     @Override
@@ -67,8 +67,4 @@ public abstract class BaseRequestPaymentParcelable implements Parcelable {
         dest.writeString(baseRequestPayment.requestId);
         Parcelables.writeBigDecimal(dest, baseRequestPayment.contractAmount);
     }
-
-    protected abstract BaseRequestPayment createBaseRequestPayment(
-            Parcel parcel, BaseRequestPayment.Status status, Error error, String requestId,
-            BigDecimal contractAmount);
 }

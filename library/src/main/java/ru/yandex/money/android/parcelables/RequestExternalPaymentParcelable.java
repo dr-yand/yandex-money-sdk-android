@@ -44,7 +44,7 @@ public final class RequestExternalPaymentParcelable extends BaseRequestPaymentPa
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        RequestExternalPayment rep = (RequestExternalPayment) baseRequestPayment;
+        RequestExternalPayment rep = (RequestExternalPayment) value;
         dest.writeString(rep.title);
         super.writeToParcel(dest, flags);
     }

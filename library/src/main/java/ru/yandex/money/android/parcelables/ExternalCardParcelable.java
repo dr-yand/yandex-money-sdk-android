@@ -45,7 +45,7 @@ public final class ExternalCardParcelable extends CardParcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        ExternalCard externalCard = (ExternalCard) moneySource;
+        ExternalCard externalCard = (ExternalCard) value;
         dest.writeString(externalCard.fundingSourceType);
         dest.writeString(externalCard.moneySourceToken);
         super.writeToParcel(dest, flags);

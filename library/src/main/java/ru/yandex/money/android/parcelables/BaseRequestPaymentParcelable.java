@@ -37,22 +37,25 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public abstract class BaseRequestPaymentParcelable implements Parcelable {
 
+    @Deprecated
     public final BaseRequestPayment baseRequestPayment;
+    public final BaseRequestPayment value;
 
-    public BaseRequestPaymentParcelable(BaseRequestPayment baseRequestPayment) {
-        if (baseRequestPayment == null) {
-            throw new NullPointerException("baseRequestPayment is null");
+    public BaseRequestPaymentParcelable(BaseRequestPayment value) {
+        if (value == null) {
+            throw new NullPointerException("value is null");
         }
-        this.baseRequestPayment = baseRequestPayment;
+        this.value = value;
+        this.baseRequestPayment = value;
     }
 
     protected BaseRequestPaymentParcelable(Parcel parcel, BaseRequestPayment.Builder builder) {
-        baseRequestPayment = builder
-                .setStatus((BaseRequestPayment.Status) parcel.readSerializable())
+        value = builder.setStatus((BaseRequestPayment.Status) parcel.readSerializable())
                 .setError((Error) parcel.readSerializable())
                 .setRequestId(parcel.readString())
                 .setContractAmount(Parcelables.readBigDecimal(parcel))
                 .create();
+        baseRequestPayment = value;
     }
 
     @Override
@@ -62,9 +65,9 @@ public abstract class BaseRequestPaymentParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(baseRequestPayment.status);
-        dest.writeSerializable(baseRequestPayment.error);
-        dest.writeString(baseRequestPayment.requestId);
-        Parcelables.writeBigDecimal(dest, baseRequestPayment.contractAmount);
+        dest.writeSerializable(value.status);
+        dest.writeSerializable(value.error);
+        dest.writeString(value.requestId);
+        Parcelables.writeBigDecimal(dest, value.contractAmount);
     }
 }

@@ -37,24 +37,27 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public abstract class BaseProcessPaymentParcelable implements Parcelable {
 
+    @Deprecated
     public final BaseProcessPayment baseProcessPayment;
+    public final BaseProcessPayment value;
 
-    public BaseProcessPaymentParcelable(BaseProcessPayment baseProcessPayment) {
-        if (baseProcessPayment == null) {
-            throw new NullPointerException("baseProcessPayment is null");
+    public BaseProcessPaymentParcelable(BaseProcessPayment value) {
+        if (value == null) {
+            throw new NullPointerException("value is null");
         }
-        this.baseProcessPayment = baseProcessPayment;
+        this.value = value;
+        this.baseProcessPayment = value;
     }
 
     protected BaseProcessPaymentParcelable(Parcel parcel, BaseProcessPayment.Builder builder) {
-        baseProcessPayment = builder
-                .setStatus((BaseProcessPayment.Status) parcel.readSerializable())
+        value = builder.setStatus((BaseProcessPayment.Status) parcel.readSerializable())
                 .setError((Error) parcel.readSerializable())
                 .setInvoiceId(parcel.readString())
                 .setAcsUri(parcel.readString())
                 .setAcsParams(Parcelables.readStringMap(parcel))
                 .setNextRetry(parcel.readLong())
                 .create();
+        baseProcessPayment = value;
     }
 
     @Override
@@ -64,11 +67,11 @@ public abstract class BaseProcessPaymentParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(baseProcessPayment.status);
-        dest.writeSerializable(baseProcessPayment.error);
-        dest.writeString(baseProcessPayment.invoiceId);
-        dest.writeString(baseProcessPayment.acsUri);
-        Parcelables.writeStringMap(dest, baseProcessPayment.acsParams);
-        dest.writeLong(baseProcessPayment.nextRetry);
+        dest.writeSerializable(value.status);
+        dest.writeSerializable(value.error);
+        dest.writeString(value.invoiceId);
+        dest.writeString(value.acsUri);
+        Parcelables.writeStringMap(dest, value.acsParams);
+        dest.writeLong(value.nextRetry);
     }
 }

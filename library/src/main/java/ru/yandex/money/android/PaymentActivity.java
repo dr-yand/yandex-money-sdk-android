@@ -129,7 +129,7 @@ public final class PaymentActivity extends Activity {
             if (savedInstanceState.containsKey(KEY_SELECTED_CARD)) {
                 selectedCard = (ExternalCard) savedInstanceState
                         .<ExternalCardParcelable>getParcelable(KEY_SELECTED_CARD)
-                        .moneySource;
+                        .value;
             }
         }
     }

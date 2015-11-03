@@ -51,8 +51,8 @@ public final class ExternalPaymentProcessSavedStateParcelable implements Parcela
         ProcessExternalPaymentParcelable pep = parcel.readParcelable(
                 ProcessExternalPaymentParcelable.class.getClassLoader());
         savedState = new ExternalPaymentProcess.SavedState(
-                rep == null ? null : (RequestExternalPayment) rep.baseRequestPayment,
-                pep == null ? null : (ProcessExternalPayment) pep.baseProcessPayment,
+                rep == null ? null : (RequestExternalPayment) rep.value,
+                pep == null ? null : (ProcessExternalPayment) pep.value,
                 parcel.readInt());
     }
 

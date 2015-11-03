@@ -48,7 +48,7 @@ public class CardParcelable extends MoneySourceParcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        Card card = (Card) moneySource;
+        Card card = (Card) value;
         dest.writeString(card.panFragment);
         dest.writeSerializable(card.type);
         super.writeToParcel(dest, flags);

@@ -34,17 +34,21 @@ import com.yandex.money.api.model.MoneySource;
  */
 public abstract class MoneySourceParcelable implements Parcelable {
 
+    @Deprecated
     public final MoneySource moneySource;
+    public final MoneySource value;
 
-    public MoneySourceParcelable(MoneySource moneySource) {
-        if (moneySource == null) {
-            throw new NullPointerException("moneySource is null");
+    public MoneySourceParcelable(MoneySource value) {
+        if (value == null) {
+            throw new NullPointerException("value is null");
         }
-        this.moneySource = moneySource;
+        this.value = value;
+        this.moneySource = value;
     }
 
     protected MoneySourceParcelable(Parcel parcel, MoneySource.Builder builder) {
-        moneySource = builder.setId(parcel.readString()).create();
+        value = builder.setId(parcel.readString()).create();
+        moneySource = value;
     }
 
     @Override
@@ -54,6 +58,6 @@ public abstract class MoneySourceParcelable implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(moneySource.id);
+        dest.writeString(value.id);
     }
 }

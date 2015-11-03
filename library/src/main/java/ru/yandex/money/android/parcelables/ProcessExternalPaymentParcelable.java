@@ -45,12 +45,12 @@ public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentPa
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
         writeMoneySource(dest, flags);
+        super.writeToParcel(dest, flags);
     }
 
     private void writeMoneySource(Parcel dest, int flags) {
-        ProcessExternalPayment pep = (ProcessExternalPayment) baseProcessPayment;
+        ProcessExternalPayment pep = (ProcessExternalPayment) value;
         ExternalCard moneySource = pep.externalCard;
         ExternalCardParcelable parcelable = moneySource == null ? null :
                 new ExternalCardParcelable(moneySource);
@@ -60,7 +60,7 @@ public final class ProcessExternalPaymentParcelable extends BaseProcessPaymentPa
     private static ExternalCard readMoneySource(Parcel parcel) {
         ExternalCardParcelable parcelable = parcel.readParcelable(
                 ExternalCardParcelable.class.getClassLoader());
-        return parcelable == null ? null : (ExternalCard) parcelable.moneySource;
+        return parcelable == null ? null : (ExternalCard) parcelable.value;
     }
 
     public static final Creator<ProcessExternalPaymentParcelable> CREATOR =

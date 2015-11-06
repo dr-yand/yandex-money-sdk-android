@@ -202,7 +202,7 @@ public class PayActivity extends ListActivity {
                 case P2P:
                     startPaymentActivityForResult(new P2pTransferParams.Builder(getPaymentTo())
                             .setAmount(getAmount())
-                            .build());
+                            .create());
                     break;
                 case PHONE:
                     startPaymentActivityForResult(PhoneParams.newInstance(getPaymentTo(),

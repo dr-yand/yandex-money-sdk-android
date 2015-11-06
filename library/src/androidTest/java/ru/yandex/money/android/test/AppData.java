@@ -67,8 +67,12 @@ final class AppData {
         prefs.storeInstanceId(instanceId);
 
         DatabaseStorage storage = new DatabaseStorage(context);
-        storage.insertMoneySource(new ExternalCard(card.number, Card.Type.parse(card.type),
-                "payment-card", card.token));
+        storage.insertMoneySource((ExternalCard) new ExternalCard.Builder()
+                .setFundingSourceType("payment-card")
+                .setMoneySourceToken(card.token)
+                .setPanFragment(card.number)
+                .setType(Card.Type.parse(card.type))
+                .create());
     }
 
     private static void checkContext(Context context) {

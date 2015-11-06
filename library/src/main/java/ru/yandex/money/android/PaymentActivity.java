@@ -33,11 +33,11 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.Window;
 
-import com.squareup.okhttp.Call;
 import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.methods.InstanceId;
@@ -48,7 +48,6 @@ import com.yandex.money.api.model.Error;
 import com.yandex.money.api.model.ExternalCard;
 import com.yandex.money.api.model.MoneySource;
 import com.yandex.money.api.net.OAuth2Session;
-import com.yandex.money.api.net.OnResponseReady;
 import com.yandex.money.api.processes.ExternalPaymentProcess;
 
 import java.util.List;
@@ -64,7 +63,11 @@ import ru.yandex.money.android.fragments.WebFragment;
 import ru.yandex.money.android.parcelables.ExternalCardParcelable;
 import ru.yandex.money.android.parcelables.ExternalPaymentProcessSavedStateParcelable;
 import ru.yandex.money.android.utils.Keyboards;
-import ru.yandex.money.android.utils.ResponseReady;
+import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * @author vyasevich
@@ -86,7 +89,7 @@ public final class PaymentActivity extends Activity {
     private List<ExternalCard> cards;
     private ExternalCard selectedCard;
     private boolean immediateProceed = true;
-    private Call call;
+    private Subscription subscription;
 
     /**
      * Returns intent builder used for launch this activity
@@ -122,14 +125,16 @@ public final class PaymentActivity extends Activity {
         if (savedInstanceState == null) {
             proceed();
         } else {
-            process.restoreSavedState(savedInstanceState
-                    .<ExternalPaymentProcessSavedStateParcelable>getParcelable(
-                            KEY_PROCESS_SAVED_STATE)
-                    .value);
-            if (savedInstanceState.containsKey(KEY_SELECTED_CARD)) {
-                selectedCard = (ExternalCard) savedInstanceState
-                        .<ExternalCardParcelable>getParcelable(KEY_SELECTED_CARD)
-                        .value;
+            ExternalPaymentProcessSavedStateParcelable savedStateParcelable =
+                    savedInstanceState.getParcelable(KEY_PROCESS_SAVED_STATE);
+            if (savedStateParcelable != null) {
+                process.restoreSavedState(savedStateParcelable.value);
+            }
+
+            ExternalCardParcelable externalCardParcelable =
+                    savedInstanceState.getParcelable(KEY_SELECTED_CARD);
+            if (externalCardParcelable != null) {
+                selectedCard = (ExternalCard) externalCardParcelable.value;
             }
         }
     }
@@ -224,19 +229,19 @@ public final class PaymentActivity extends Activity {
     }
 
     public void proceed() {
-        call = performOperation(new Callable<Call>() {
+        subscription = performPaymentOperation(new Callable<Boolean>() {
             @Override
-            public Call call() throws Exception {
-                return process.proceedAsync();
+            public Boolean call() throws Exception {
+                return process.proceed();
             }
         });
     }
 
     public void repeat() {
-        call = performOperation(new Callable<Call>() {
+        subscription = performPaymentOperation(new Callable<Boolean>() {
             @Override
-            public Call call() throws Exception {
-                return process.repeatAsync();
+            public Boolean call() throws Exception {
+                return process.repeat();
             }
         });
     }
@@ -249,19 +254,53 @@ public final class PaymentActivity extends Activity {
 
     public void cancel() {
         selectedCard = null;
-        if (call != null) {
-            call.cancel();
-            call = null;
+        if (subscription != null) {
+            subscription.unsubscribe();
+            subscription = null;
         }
     }
 
-    private Call performOperation(Callable<Call> operation) {
+    private Subscription performPaymentOperation(@NonNull Callable<Boolean> operation) {
+        return performOperation(operation, new Action1<Boolean>() {
+            @Override
+            public void call(Boolean aBoolean) {
+                handleProcess();
+            }
+        });
+    }
+
+    private <T> Subscription performOperation(@NonNull final Callable<T> operation,
+                                      @NonNull final Action1<T> onResponse) {
+
         showProgressBar();
-        try {
-            return operation.call();
-        } catch (Exception e) {
-            onOperationFailed();
-            return null;
+        return Observable.fromCallable(operation)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<T>() {
+                    @Override
+                    public void call(T o) {
+                        onResponse.call(o);
+                        hideProgressBar();
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        onOperationFailed();
+                        hideProgressBar();
+                    }
+                });
+    }
+
+    private void handleProcess() {
+        BaseProcessPayment processPayment = process.getProcessPayment();
+        if (processPayment != null) {
+            onExternalPaymentProcessed((ProcessExternalPayment) processPayment);
+            return;
+        }
+
+        BaseRequestPayment requestPayment = process.getRequestPayment();
+        if (requestPayment != null) {
+            onExternalPaymentReceived((RequestExternalPayment) requestPayment);
         }
     }
 
@@ -314,35 +353,25 @@ public final class PaymentActivity extends Activity {
         };
 
         process = new ExternalPaymentProcess(session, parameterProvider);
-        process.setCallbacks(new Callbacks());
 
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
         if (TextUtils.isEmpty(instanceId)) {
-            call = performOperation(new Callable<Call>() {
+            performOperation(new Callable<InstanceId>() {
                 @Override
-                public Call call() throws Exception {
-                    return session.enqueue(new InstanceId.Request(clientId),
-                            new ResponseReady<InstanceId>() {
-
-                                @Override
-                                public void failure(Exception exception) {
-                                    exception.printStackTrace();
-                                    onOperationFailed();
-                                }
-
-                                @Override
-                                public void response(InstanceId response) {
-                                    if (response.isSuccess()) {
-                                        prefs.storeInstanceId(response.instanceId);
-                                        process.setInstanceId(response.instanceId);
-                                        proceed();
-                                    } else {
-                                        showError(response.error, response.status.code);
-                                    }
-                                    hideProgressBar();
-                                }
-                            });
+                public InstanceId call() throws Exception {
+                    return session.execute(new InstanceId.Request(clientId));
+                }
+            }, new Action1<InstanceId>() {
+                @Override
+                public void call(InstanceId response) {
+                    if (response.isSuccess()) {
+                        prefs.storeInstanceId(response.instanceId);
+                        process.setInstanceId(response.instanceId);
+                        proceed();
+                    } else {
+                        showError(response.error, response.status.code);
+                    }
                 }
             });
             return false;
@@ -429,7 +458,6 @@ public final class PaymentActivity extends Activity {
 
     public interface PaymentParamsBuilder {
         AppClientIdBuilder setPaymentParams(String patternId, Map<String, String> paymentParams);
-
         AppClientIdBuilder setPaymentParams(PaymentParams paymentParams);
     }
 
@@ -442,9 +470,10 @@ public final class PaymentActivity extends Activity {
         Intent build();
     }
 
-    private final static class IntentBuilder implements PaymentParamsBuilder, AppClientIdBuilder,
-            Builder {
+    private final static class IntentBuilder
+            implements PaymentParamsBuilder, AppClientIdBuilder, Builder {
 
+        @NonNull
         private final Context context;
 
         private String patternId;
@@ -453,10 +482,7 @@ public final class PaymentActivity extends Activity {
         private String host;
         private String clientId;
 
-        public IntentBuilder(Context context) {
-            if (context == null) {
-                throw new NullPointerException("context is null");
-            }
+        public IntentBuilder(@NonNull Context context) {
             this.context = context;
             this.host = ApiClientWrapper.PRODUCTION_HOST;
         }
@@ -494,49 +520,6 @@ public final class PaymentActivity extends Activity {
 
         private Intent createIntent() {
             return new Intent(context, PaymentActivity.class);
-        }
-    }
-
-    private final class Callbacks implements ExternalPaymentProcess.Callbacks {
-
-        private final OnResponseReady<RequestExternalPayment> requestReady =
-                new ResponseReady<RequestExternalPayment>() {
-
-                    @Override
-                    public void failure(Exception exception) {
-                        onOperationFailed();
-                    }
-
-                    @Override
-                    public void response(RequestExternalPayment response) {
-                        onExternalPaymentReceived(response);
-                        hideProgressBar();
-                    }
-                };
-
-        private final OnResponseReady<ProcessExternalPayment> processReady =
-                new ResponseReady<ProcessExternalPayment>() {
-
-                    @Override
-                    public void failure(Exception exception) {
-                        onOperationFailed();
-                    }
-
-                    @Override
-                    public void response(ProcessExternalPayment response) {
-                        onExternalPaymentProcessed(response);
-                        hideProgressBar();
-                    }
-                };
-
-        @Override
-        public OnResponseReady<RequestExternalPayment> getOnRequestCallback() {
-            return requestReady;
-        }
-
-        @Override
-        public OnResponseReady<ProcessExternalPayment> getOnProcessCallback() {
-            return processReady;
         }
     }
 }

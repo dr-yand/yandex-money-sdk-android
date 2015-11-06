@@ -229,21 +229,11 @@ public final class PaymentActivity extends Activity {
     }
 
     public void proceed() {
-        subscription = performPaymentOperation(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return process.proceed();
-            }
-        });
+        subscription = performPaymentOperation(process::proceed);
     }
 
     public void repeat() {
-        subscription = performPaymentOperation(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return process.repeat();
-            }
-        });
+        subscription = performPaymentOperation(process::repeat);
     }
 
     public void reset() {
@@ -261,12 +251,7 @@ public final class PaymentActivity extends Activity {
     }
 
     private Subscription performPaymentOperation(@NonNull Callable<Boolean> operation) {
-        return performOperation(operation, new Action1<Boolean>() {
-            @Override
-            public void call(Boolean aBoolean) {
-                handleProcess();
-            }
-        });
+        return performOperation(operation, aBoolean -> handleProcess());
     }
 
     private <T> Subscription performOperation(@NonNull final Callable<T> operation,
@@ -276,18 +261,12 @@ public final class PaymentActivity extends Activity {
         return Observable.fromCallable(operation)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<T>() {
-                    @Override
-                    public void call(T o) {
-                        onResponse.call(o);
-                        hideProgressBar();
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        onOperationFailed();
-                        hideProgressBar();
-                    }
+                .subscribe(o -> {
+                    onResponse.call(o);
+                    hideProgressBar();
+                }, throwable -> {
+                    onOperationFailed();
+                    hideProgressBar();
                 });
     }
 
@@ -357,21 +336,13 @@ public final class PaymentActivity extends Activity {
         final Prefs prefs = new Prefs(this);
         String instanceId = prefs.restoreInstanceId();
         if (TextUtils.isEmpty(instanceId)) {
-            performOperation(new Callable<InstanceId>() {
-                @Override
-                public InstanceId call() throws Exception {
-                    return session.execute(new InstanceId.Request(clientId));
-                }
-            }, new Action1<InstanceId>() {
-                @Override
-                public void call(InstanceId response) {
-                    if (response.isSuccess()) {
-                        prefs.storeInstanceId(response.instanceId);
-                        process.setInstanceId(response.instanceId);
-                        proceed();
-                    } else {
-                        showError(response.error, response.status.code);
-                    }
+            performOperation(() -> session.execute(new InstanceId.Request(clientId)), response -> {
+                if (response.isSuccess()) {
+                    prefs.storeInstanceId(response.instanceId);
+                    process.setInstanceId(response.instanceId);
+                    proceed();
+                } else {
+                    showError(response.error, response.status.code);
                 }
             });
             return false;

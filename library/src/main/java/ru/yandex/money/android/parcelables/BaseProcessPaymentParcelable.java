@@ -26,6 +26,7 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.methods.BaseProcessPayment;
 import com.yandex.money.api.model.Error;
@@ -37,19 +38,20 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public abstract class BaseProcessPaymentParcelable implements Parcelable {
 
+    @NonNull
     @Deprecated
     public final BaseProcessPayment baseProcessPayment;
+    @NonNull
     public final BaseProcessPayment value;
 
-    public BaseProcessPaymentParcelable(BaseProcessPayment value) {
-        if (value == null) {
-            throw new NullPointerException("value is null");
-        }
+    public BaseProcessPaymentParcelable(@NonNull BaseProcessPayment value) {
         this.value = value;
         this.baseProcessPayment = value;
     }
 
-    protected BaseProcessPaymentParcelable(Parcel parcel, BaseProcessPayment.Builder builder) {
+    protected BaseProcessPaymentParcelable(@NonNull Parcel parcel,
+                                           @NonNull BaseProcessPayment.Builder builder) {
+
         value = builder.setStatus((BaseProcessPayment.Status) parcel.readSerializable())
                 .setError((Error) parcel.readSerializable())
                 .setInvoiceId(parcel.readString())

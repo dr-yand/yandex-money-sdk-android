@@ -26,6 +26,7 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.methods.BaseRequestPayment;
 import com.yandex.money.api.model.Error;
@@ -37,19 +38,20 @@ import ru.yandex.money.android.utils.Parcelables;
  */
 public abstract class BaseRequestPaymentParcelable implements Parcelable {
 
+    @NonNull
     @Deprecated
     public final BaseRequestPayment baseRequestPayment;
+    @NonNull
     public final BaseRequestPayment value;
 
-    public BaseRequestPaymentParcelable(BaseRequestPayment value) {
-        if (value == null) {
-            throw new NullPointerException("value is null");
-        }
+    public BaseRequestPaymentParcelable(@NonNull BaseRequestPayment value) {
         this.value = value;
         this.baseRequestPayment = value;
     }
 
-    protected BaseRequestPaymentParcelable(Parcel parcel, BaseRequestPayment.Builder builder) {
+    protected BaseRequestPaymentParcelable(@NonNull Parcel parcel,
+                                           @NonNull BaseRequestPayment.Builder builder) {
+
         value = builder.setStatus((BaseRequestPayment.Status) parcel.readSerializable())
                 .setError((Error) parcel.readSerializable())
                 .setRequestId(parcel.readString())

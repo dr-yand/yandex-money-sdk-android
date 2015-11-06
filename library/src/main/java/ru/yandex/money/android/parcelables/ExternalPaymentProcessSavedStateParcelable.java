@@ -26,6 +26,7 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.methods.ProcessExternalPayment;
 import com.yandex.money.api.methods.RequestExternalPayment;
@@ -36,24 +37,29 @@ import com.yandex.money.api.processes.ExternalPaymentProcess;
  */
 public final class ExternalPaymentProcessSavedStateParcelable implements Parcelable {
 
+    @NonNull
+    @Deprecated
     public final ExternalPaymentProcess.SavedState savedState;
+    @NonNull
+    public final ExternalPaymentProcess.SavedState value;
 
-    public ExternalPaymentProcessSavedStateParcelable(ExternalPaymentProcess.SavedState savedState) {
-        if (savedState == null) {
-            throw new NullPointerException("savedState is null");
-        }
-        this.savedState = savedState;
+    public ExternalPaymentProcessSavedStateParcelable(
+            @NonNull ExternalPaymentProcess.SavedState value) {
+
+        this.value = value;
+        this.savedState = value;
     }
 
-    private ExternalPaymentProcessSavedStateParcelable(Parcel parcel) {
+    private ExternalPaymentProcessSavedStateParcelable(@NonNull Parcel parcel) {
         RequestExternalPaymentParcelable rep = parcel.readParcelable(
                 RequestExternalPaymentParcelable.class.getClassLoader());
         ProcessExternalPaymentParcelable pep = parcel.readParcelable(
                 ProcessExternalPaymentParcelable.class.getClassLoader());
-        savedState = new ExternalPaymentProcess.SavedState(
+        value = new ExternalPaymentProcess.SavedState(
                 rep == null ? null : (RequestExternalPayment) rep.value,
                 pep == null ? null : (ProcessExternalPayment) pep.value,
                 parcel.readInt());
+        this.savedState = value;
     }
 
     @Override
@@ -63,15 +69,15 @@ public final class ExternalPaymentProcessSavedStateParcelable implements Parcela
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        RequestExternalPayment requestPayment = savedState.getRequestPayment();
+        RequestExternalPayment requestPayment = value.getRequestPayment();
         dest.writeParcelable(requestPayment == null ? null :
                 new RequestExternalPaymentParcelable(requestPayment), flags);
 
-        ProcessExternalPayment processPayment = savedState.getProcessPayment();
+        ProcessExternalPayment processPayment = value.getProcessPayment();
         dest.writeParcelable(processPayment == null ? null :
                 new ProcessExternalPaymentParcelable(processPayment), flags);
 
-        dest.writeInt(savedState.getFlags());
+        dest.writeInt(value.getFlags());
     }
 
     public static final Creator<ExternalPaymentProcessSavedStateParcelable> CREATOR =

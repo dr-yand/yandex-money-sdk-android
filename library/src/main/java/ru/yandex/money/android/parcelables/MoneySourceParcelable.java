@@ -26,6 +26,7 @@ package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.model.MoneySource;
 
@@ -34,19 +35,18 @@ import com.yandex.money.api.model.MoneySource;
  */
 public abstract class MoneySourceParcelable implements Parcelable {
 
+    @NonNull
     @Deprecated
     public final MoneySource moneySource;
+    @NonNull
     public final MoneySource value;
 
-    public MoneySourceParcelable(MoneySource value) {
-        if (value == null) {
-            throw new NullPointerException("value is null");
-        }
+    public MoneySourceParcelable(@NonNull MoneySource value) {
         this.value = value;
         this.moneySource = value;
     }
 
-    protected MoneySourceParcelable(Parcel parcel, MoneySource.Builder builder) {
+    protected MoneySourceParcelable(@NonNull Parcel parcel, @NonNull MoneySource.Builder builder) {
         value = builder.setId(parcel.readString()).create();
         moneySource = value;
     }

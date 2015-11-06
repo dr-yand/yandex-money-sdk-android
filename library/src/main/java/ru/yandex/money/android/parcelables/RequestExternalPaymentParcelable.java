@@ -25,6 +25,7 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.methods.RequestExternalPayment;
 
@@ -33,17 +34,17 @@ import com.yandex.money.api.methods.RequestExternalPayment;
  */
 public final class RequestExternalPaymentParcelable extends BaseRequestPaymentParcelable {
 
-    public RequestExternalPaymentParcelable(RequestExternalPayment rep) {
-        super(rep);
+    public RequestExternalPaymentParcelable(@NonNull RequestExternalPayment value) {
+        super(value);
     }
 
-    private RequestExternalPaymentParcelable(Parcel parcel) {
+    private RequestExternalPaymentParcelable(@NonNull Parcel parcel) {
         super(parcel, new RequestExternalPayment.Builder()
                 .setTitle(parcel.readString()));
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         RequestExternalPayment rep = (RequestExternalPayment) value;
         dest.writeString(rep.title);
         super.writeToParcel(dest, flags);

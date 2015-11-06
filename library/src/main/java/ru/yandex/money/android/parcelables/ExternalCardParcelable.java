@@ -25,6 +25,7 @@
 package ru.yandex.money.android.parcelables;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import com.yandex.money.api.model.ExternalCard;
 
@@ -33,11 +34,11 @@ import com.yandex.money.api.model.ExternalCard;
  */
 public final class ExternalCardParcelable extends CardParcelable {
 
-    public ExternalCardParcelable(ExternalCard externalCard) {
-        super(externalCard);
+    public ExternalCardParcelable(@NonNull ExternalCard value) {
+        super(value);
     }
 
-    private ExternalCardParcelable(Parcel parcel) {
+    private ExternalCardParcelable(@NonNull Parcel parcel) {
         super(parcel, new ExternalCard.Builder()
                 .setFundingSourceType(parcel.readString())
                 .setMoneySourceToken(parcel.readString()));

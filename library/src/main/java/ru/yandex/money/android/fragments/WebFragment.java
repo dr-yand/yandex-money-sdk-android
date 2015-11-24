@@ -36,12 +36,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.yandex.money.api.model.Error;
+import com.yandex.money.api.net.ParametersBuffer;
 
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EncodingUtils;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Map;
 
 import ru.yandex.money.android.PaymentArguments;
@@ -109,21 +105,9 @@ public final class WebFragment extends PaymentFragment {
     }
 
     private byte[] buildPostData(Map<String, String> postParams) {
-        String url = "";
-        for (Map.Entry<String, String> entry : postParams.entrySet()) {
-            url += entry.getKey() + "=" + safeUrlEncoding(entry.getValue()) + "&";
-        }
-        //noinspection deprecation
-        return EncodingUtils.getBytes(url, "BASE64");
-    }
-
-    private String safeUrlEncoding(String value) {
-        try {
-            //noinspection deprecation
-            return URLEncoder.encode(value, HTTP.UTF_8);
-        } catch (UnsupportedEncodingException e) {
-            return value;
-        }
+        return new ParametersBuffer()
+                .setParams(postParams)
+                .prepareBytes();
     }
 
     private class Client extends WebViewClient {

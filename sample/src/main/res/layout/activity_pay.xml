@@ -30,7 +30,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:paddingLeft="10dp"
-        android:text="@string/activity_pay_previous"/>
+        android:text="@string/activity_pay_previous"
+        tools:ignore="RtlHardcoded,RtlSymmetry" />
 
     <ListView
         android:id="@android:id/list"

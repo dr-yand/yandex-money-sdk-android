@@ -102,6 +102,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while (cursor.moveToNext()) {
             values.add(cursor.getString(0));
         }
+        cursor.close();
         return values;
     }
 

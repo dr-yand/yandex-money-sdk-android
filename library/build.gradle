@@ -31,11 +31,11 @@ android {
 }
 
 def theVersionName() {
-    return "3.1.2"
+    return "3.1.3"
 }
 
 dependencies {
-    compile 'com.yandex.money.api:yandex-money-sdk-java:5.0.8'
+    compile 'com.yandex.money.api:yandex-money-sdk-java:5.0.9'
     compile 'com.android.support:support-v13:23.1.1'
     compile 'io.reactivex:rxandroid:1.0.1'
     compile 'io.reactivex:rxjava:1.0.16'

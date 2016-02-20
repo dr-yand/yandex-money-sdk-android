@@ -75,6 +75,7 @@ import rx.schedulers.Schedulers;
 public final class PaymentActivity extends Activity {
 
     public static final String EXTRA_INVOICE_ID = "ru.yandex.money.android.extra.INVOICE_ID";
+    public static final String EXTRA_REQUEST_ID = "ru.yandex.money.android.extra.REQUEST_ID";
 
     private static final String EXTRA_ARGUMENTS = "ru.yandex.money.android.extra.ARGUMENTS";
     private static final String EXTRA_HOST = "ru.yandex.money.android.extra.HOST";
@@ -90,6 +91,7 @@ public final class PaymentActivity extends Activity {
     private ExternalCard selectedCard;
     private boolean immediateProceed = true;
     private Subscription subscription;
+    private String requestId;
 
     /**
      * Returns intent builder used for launch this activity
@@ -279,6 +281,7 @@ public final class PaymentActivity extends Activity {
 
         BaseRequestPayment requestPayment = process.getRequestPayment();
         if (requestPayment != null) {
+            requestId = requestPayment.requestId;
             onExternalPaymentReceived((RequestExternalPayment) requestPayment);
         }
     }
@@ -421,6 +424,7 @@ public final class PaymentActivity extends Activity {
         if (pp != null && pp.status == BaseProcessPayment.Status.SUCCESS) {
             Intent intent = new Intent();
             intent.putExtra(EXTRA_INVOICE_ID, pp.invoiceId);
+            intent.putExtra(EXTRA_REQUEST_ID, requestId);
             setResult(RESULT_OK, intent);
         } else {
             setResult(RESULT_CANCELED);
